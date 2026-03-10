@@ -39,6 +39,7 @@ let currentState = {
 
 // Simulation mode
 let simulationActive = false;
+let recoveryActive = false;
 
 // Users Mock Data
 let users = [
@@ -261,7 +262,9 @@ function evaluateCustomRules(metrics, scores) {
 function updateDashboard() {
     const metrics = simulationActive
         ? metricsGen.generateCrisisMetrics(currentState.metrics)
-        : metricsGen.generateMetrics(currentState.metrics);
+        : recoveryActive
+            ? metricsGen.generateRecoveryMetrics(currentState.metrics)
+            : metricsGen.generateMetrics(currentState.metrics);
 
     const scores = scoringEngine.computeAllScores(metrics, metricsGen.history, businessProfile);
     
@@ -550,7 +553,14 @@ function generateAIResponse(query, state) {
     let text = '';
     let actions = [];
 
-    if (q.includes('stress') || q.includes('bss') || q.includes('score')) {
+    if (q.includes('resolve') && (q.includes('crisis') || q.includes('this') || q.includes('issue') || q.includes('help'))) {
+        if (state.simulationMode || state.warRoomActive || recoveryActive || scores.bss > 40) {
+            text = `I have initiated the emergency recovery protocol. Autonomous agents have been deployed to reroute supply chains, escalate critical support tickets, and initiate targeted flash sales with predictive models. The affected systems will gradually stabilize and return to baseline.`;
+            actions.push({ type: 'resolve_crisis', label: 'Resolve Crisis' });
+        } else {
+            text = `Business operations are currently within normal baseline parameters. I'll continue monitoring systems and am standing by if an incident occurs.`;
+        }
+    } else if (q.includes('stress') || q.includes('bss') || q.includes('score')) {
         const topRisk = Object.entries(scores)
             .filter(([k]) => k !== 'bss')
             .sort((a, b) => b[1] - a[1])[0];
@@ -655,6 +665,12 @@ function generateFallbackResponse(query, state) {
 
 function executeAction(action, state, metricsGen) {
     switch (action.type) {
+        case 'resolve_crisis':
+            simulationActive = false;
+            recoveryActive = true;
+            setTimeout(() => { recoveryActive = false; }, 180000);
+            return { success: true, message: `Emergency recovery protocol initiated. Operations are returning to normal.` };
+
         case 'restock':
             state.metrics.inventory.items.forEach(item => {
                 if (item.stock < item.reorderPoint) {

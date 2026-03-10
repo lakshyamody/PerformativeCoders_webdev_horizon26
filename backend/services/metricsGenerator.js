@@ -224,6 +224,51 @@ class MetricsGenerator {
         return metrics;
     }
 
+    generateRecoveryMetrics(prevMetrics) {
+        this.tickCount++;
+        const metrics = JSON.parse(JSON.stringify(prevMetrics));
+
+        // Sales recovery
+        metrics.sales.revenue += 1500 + Math.random() * 500;
+        metrics.sales.conversionRate = Math.min(4.5, metrics.sales.conversionRate + 0.15);
+
+        // Inventory recovery
+        metrics.inventory.items.forEach(item => {
+            if (item.stock < item.reorderPoint) {
+                item.stock += 15; // fast emergency restock
+            }
+            item.demandVelocity = Math.max(2, item.demandVelocity * 0.95);
+        });
+        metrics.inventory.totalUnits = metrics.inventory.items.reduce((s, i) => s + i.stock, 0);
+        metrics.inventory.lowStockCount = metrics.inventory.items.filter(i => i.stock < i.reorderPoint).length;
+
+        // Support recovery
+        metrics.support.openTickets = Math.max(5, metrics.support.openTickets - 3);
+        metrics.support.avgSeverity = Math.max(1.5, metrics.support.avgSeverity - 0.15);
+        metrics.support.resolutionRate = Math.min(95, metrics.support.resolutionRate + 2);
+        metrics.support.satisfaction = Math.min(4.8, metrics.support.satisfaction + 0.1);
+
+        // Cash recovery
+        metrics.cashflow.available *= 1.01;
+        metrics.cashflow.monthlyExpenses *= 0.99;
+        metrics.cashflow.dailyBurn = metrics.cashflow.monthlyExpenses / 30;
+        metrics.cashflow.runway = metrics.cashflow.available / Math.max(metrics.cashflow.monthlyExpenses, 1);
+
+        this.history.push({
+            timestamp: Date.now(),
+            revenue: metrics.sales.revenue,
+            stock: metrics.inventory.totalUnits,
+            tickets: metrics.support.openTickets,
+            cash: metrics.cashflow.available
+        });
+
+        if (this.history.length > this.maxHistory) {
+            this.history = this.history.slice(-this.maxHistory);
+        }
+
+        return metrics;
+    }
+
     getHistory(rangeStr = 'live') {
         if (!rangeStr || rangeStr === 'live') {
             return this.history.slice(-60);
