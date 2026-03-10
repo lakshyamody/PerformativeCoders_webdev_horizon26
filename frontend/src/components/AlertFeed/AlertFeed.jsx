@@ -1,5 +1,6 @@
 import { motion, AnimatePresence } from 'framer-motion';
-import { Bell, AlertTriangle, AlertOctagon, TrendingUp, Calendar, Download, Plus, MoreHorizontal } from 'lucide-react';
+import { Bell, AlertTriangle, AlertOctagon, TrendingUp, Calendar, Download, Plus, X } from 'lucide-react';
+import useDashboardStore from '../../store/dashboardStore';
 
 function timeAgo(ts) {
     const diff = Date.now() - ts;
@@ -9,6 +10,7 @@ function timeAgo(ts) {
 }
 
 export default function AlertFeed({ alerts = [] }) {
+    const dismissAlert = useDashboardStore(s => s.dismissAlert);
     
     const getAlertStyles = (type) => {
         switch(type) {
@@ -124,8 +126,12 @@ export default function AlertFeed({ alerts = [] }) {
                                                 {timeAgo(alert.timestamp)}
                                             </td>
                                             <td className="p-4 pr-6 text-right">
-                                                <button className="text-gray-400 hover:text-white transition-colors p-1.5 rounded-md hover:bg-white/10">
-                                                    <MoreHorizontal size={16} />
+                                                <button 
+                                                    onClick={() => dismissAlert(alert.id)}
+                                                    className="text-gray-400 hover:text-white hover:text-red-400 transition-colors p-1.5 rounded-md hover:bg-white/10"
+                                                    title="Dismiss Alert"
+                                                >
+                                                    <X size={16} />
                                                 </button>
                                             </td>
                                         </motion.tr>

@@ -9,8 +9,12 @@ const useDashboardStore = create((set, get) => ({
     metrics: null,
     scores: null,
     alerts: [],
+    addAlert: (alert) => set((s) => ({ alerts: [alert, ...s.alerts] })),
+    dismissAlert: (id) => set((s) => ({ alerts: s.alerts.filter(a => a.id !== id) })),
     warRoomActive: false,
+    setWarRoomActive: (active) => set({ warRoomActive: active }),
     simulationMode: false,
+    setSimulationMode: (active) => set({ simulationMode: active }),
     strategy: null,
     timestamp: null,
 

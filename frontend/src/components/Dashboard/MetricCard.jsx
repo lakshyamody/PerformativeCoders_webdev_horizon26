@@ -7,7 +7,8 @@ export default function MetricCard({
     icon: Icon, 
     badgeValue, 
     badgeType = 'neutral', 
-    delay = 0 
+    delay = 0,
+    onClick 
 }) {
     // Determine badge colors based on type
     let badgeColors = 'bg-white/10 text-gray-300';
@@ -15,12 +16,15 @@ export default function MetricCard({
     if (badgeType === 'negative') badgeColors = 'bg-red-500/10 text-red-400';
     if (badgeType === 'warning') badgeColors = 'bg-amber-500/10 text-amber-400';
 
+    const CardBase = onClick ? motion.button : motion.div;
+
     return (
-        <motion.div
+        <CardBase
+            onClick={onClick}
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay }}
-            className="flex flex-col p-5 bg-[#1a2236] border border-white/5 rounded-xl shadow-lg hover:-translate-y-1 transition-transform duration-300"
+            className={`flex flex-col text-left p-5 bg-[#1a2236] border border-white/5 rounded-xl shadow-lg transition-all duration-300 ${onClick ? 'cursor-pointer hover:-translate-y-1 hover:border-white/10 hover:shadow-xl' : 'hover:-translate-y-1'}`}
         >
             <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
@@ -39,6 +43,6 @@ export default function MetricCard({
                     {value}
                 </span>
             </div>
-        </motion.div>
+        </CardBase>
     );
 }

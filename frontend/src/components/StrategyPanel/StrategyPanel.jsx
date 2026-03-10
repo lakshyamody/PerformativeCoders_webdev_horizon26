@@ -1,11 +1,26 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
+import { apiClient } from '../../api/apiClient';
 import { 
     AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line 
 } from 'recharts';
 import { Target, Activity, Zap, TrendingUp, AlertCircle, ArrowRight } from 'lucide-react';
 
-export default function StrategyPanel({ strategy, forecast, history }) {
+export default function StrategyPanel({ strategy, history }) {
+    const [forecast, setForecast] = useState(null);
+    const [loadingForecast, setLoadingForecast] = useState(false);
+
+    const handleFetchForecast = async () => {
+        setLoadingForecast(true);
+        try {
+            const data = await apiClient.getForecast();
+            setForecast(data);
+        } catch (err) {
+            console.error('Failed to load 24h forecast', err);
+        } finally {
+            setLoadingForecast(false);
+        }
+    };
     if (!strategy) {
         return (
             <div className="flex flex-col items-center justify-center p-20 bg-[#1a2236] border border-white/5 rounded-xl text-center">
@@ -161,11 +176,16 @@ export default function StrategyPanel({ strategy, forecast, history }) {
                 <div className="col-span-1 lg:col-span-2 flex flex-col gap-6">
                     <div className="flex items-center justify-between">
                         <h3 className="text-base font-semibold text-white">24-Hour Forecast Overlay</h3>
-                        <button className="text-xs font-medium text-[#6366f1] hover:text-indigo-400 flex items-center gap-1 transition-colors">
-                            Run simulation <ArrowRight size={12} />
+                        <button 
+                            onClick={handleFetchForecast}
+                            disabled={loadingForecast}
+                            className="text-xs font-medium text-[#6366f1] hover:text-indigo-400 flex items-center gap-1 transition-colors disabled:opacity-50"
+                        >
+                            {loadingForecast ? 'Loading...' : 'View 24h Forecast'} <ArrowRight size={12} />
                         </button>
                     </div>
                     
+                    {forecast ? (
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                         {/* Revenue Forecast */}
                         <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.4 }} className="bg-[#1a2236] border border-white/5 rounded-xl p-5 shadow-lg">
@@ -211,6 +231,11 @@ export default function StrategyPanel({ strategy, forecast, history }) {
                             </div>
                         </motion.div>
                     </div>
+                    ) : (
+                        <div className="flex items-center justify-center p-8 border border-dashed border-white/10 rounded-xl bg-white/[0.02]">
+                            <p className="text-sm text-gray-500">Run the forecast engine to view 24-hour predictive models.</p>
+                        </div>
+                    )}
                 </div>
 
                 {/* AI Recommendations */}

@@ -3,8 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Mic, Send, X, Bot, User, Play } from 'lucide-react';
 import { useVoiceInput } from '../../hooks/useVoiceInput';
 import useDashboardStore from '../../store/dashboardStore';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
+import { apiClient } from '../../api/apiClient';
 
 export default function VoiceDrawer() {
     const {
@@ -17,7 +16,7 @@ export default function VoiceDrawer() {
     } = useDashboardStore();
 
     const [textInput, setTextInput] = useState('');
-    const { listening, transcript, startListening, stopListening, setTranscript } = useVoiceInput();
+    const { listening, transcript, startListening, stopListening, setTranscript, supported } = useVoiceInput();
     const messagesEndRef = useRef(null);
     const inputRef = useRef(null);
 
@@ -39,12 +38,7 @@ export default function VoiceDrawer() {
         setIsTyping(true);
 
         try {
-            const res = await fetch(`${API_URL}/api/assistant/query`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ query })
-            });
-            const data = await res.json();
+            const data = await apiClient.postQuery(query);
 
             addVoiceMessage({
                 role: 'assistant',
@@ -73,12 +67,7 @@ export default function VoiceDrawer() {
 
     const handleAction = async (action) => {
         try {
-            const res = await fetch(`${API_URL}/api/assistant/action`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ action })
-            });
-            const data = await res.json();
+            const data = await apiClient.postAction(action);
             addVoiceMessage({
                 role: 'assistant',
                 text: `✅ ${data.message}`,
@@ -202,17 +191,25 @@ export default function VoiceDrawer() {
                         {/* Input Area */}
                         <div className="p-4 border-t border-white/5 bg-[#111827]">
                             <form onSubmit={handleSubmit} className="flex items-center gap-2 p-1.5 bg-[#1a2236] border border-white/10 rounded-xl focus-within:border-indigo-500/50 focus-within:ring-1 focus-within:ring-indigo-500/50 transition-all">
-                                <button
-                                    type="button"
-                                    onClick={listening ? stopListening : startListening}
-                                    className={`w-9 h-9 flex items-center justify-center rounded-lg transition-colors shrink-0 ${
-                                        listening 
-                                            ? 'bg-red-500/20 text-red-500 animate-pulse' 
-                                            : 'text-gray-400 hover:text-white hover:bg-white/5'
-                                    }`}
-                                >
-                                    <Mic size={18} />
-                                </button>
+                                <div className="relative group flex shrink-0">
+                                    <button
+                                        type="button"
+                                        onClick={supported ? (listening ? stopListening : startListening) : undefined}
+                                        className={`w-9 h-9 flex items-center justify-center rounded-lg transition-colors ${
+                                            !supported ? 'opacity-50 cursor-not-allowed bg-white/5 text-gray-500' :
+                                            listening 
+                                                ? 'bg-red-500/20 text-red-500 animate-pulse' 
+                                                : 'text-gray-400 hover:text-white hover:bg-white/5'
+                                        }`}
+                                    >
+                                        <Mic size={18} />
+                                    </button>
+                                    {!supported && (
+                                        <div className="absolute bottom-full left-0 mb-2 w-48 p-2 bg-[#1a2236] text-xs text-white rounded-md opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 shadow-xl border border-white/10 text-center">
+                                            Voice input requires Chrome or Edge.
+                                        </div>
+                                    )}
+                                </div>
                                 
                                 <input
                                     ref={inputRef}
@@ -221,13 +218,13 @@ export default function VoiceDrawer() {
                                     className="flex-1 bg-transparent border-none text-sm text-white placeholder:text-gray-500 focus:outline-none focus:ring-0 px-2 min-w-0"
                                     value={listening ? transcript : textInput}
                                     onChange={(e) => setTextInput(e.target.value)}
-                                    disabled={listening}
+                                    disabled={listening || isTyping}
                                 />
                                 
                                 <button
                                     type="submit"
-                                    disabled={!textInput.trim() && !listening}
-                                    className={`w-9 h-9 flex items-center justify-center rounded-lg transition-colors shrink-0 ${
+                                    disabled={(!textInput.trim() && !listening) || isTyping}
+                                    className={`w-9 h-9 flex items-center justify-center rounded-lg transition-colors shrink-0 disabled:opacity-50 ${
                                         textInput.trim() || listening
                                             ? 'bg-[#6366f1] text-white'
                                             : 'bg-white/5 text-gray-500'

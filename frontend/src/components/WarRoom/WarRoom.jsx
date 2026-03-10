@@ -1,9 +1,9 @@
 import { motion, AnimatePresence } from 'framer-motion';
-import { AlertOctagon } from 'lucide-react';
+import { AlertOctagon, X } from 'lucide-react';
 import useDashboardStore from '../../store/dashboardStore';
 
 export default function WarRoom({ active }) {
-    const scores = useDashboardStore((s) => s.scores);
+    const { scores, setWarRoomActive } = useDashboardStore();
     const bss = scores?.bss || 0;
 
     return (
@@ -24,7 +24,7 @@ export default function WarRoom({ active }) {
                     
                     {/* Banner */}
                     <motion.div
-                        className="relative mt-4 px-6 py-3 bg-red-500/20 border border-red-500/30 backdrop-blur-md rounded-full shadow-[0_0_30px_rgba(239,68,68,0.3)] flex items-center gap-3"
+                        className="relative mt-4 px-6 py-3 bg-red-500/20 border border-red-500/30 backdrop-blur-md rounded-full shadow-[0_0_30px_rgba(239,68,68,0.3)] flex items-center gap-3 pointer-events-auto"
                         initial={{ opacity: 0, y: -50, scale: 0.9 }}
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: -50, scale: 0.9 }}
@@ -35,6 +35,15 @@ export default function WarRoom({ active }) {
                             War Room Active — BSS: {Math.round(bss)}
                         </span>
                         <AlertOctagon size={20} className="text-red-400 animate-pulse" />
+                        
+                        <div className="w-px h-4 bg-red-500/30 mx-2"></div>
+                        <button 
+                            onClick={() => setWarRoomActive(false)}
+                            className="text-red-400 hover:text-white transition-colors p-1 rounded-full hover:bg-red-500/20"
+                            title="Dismiss War Room"
+                        >
+                            <X size={16} />
+                        </button>
                     </motion.div>
                 </div>
             )}

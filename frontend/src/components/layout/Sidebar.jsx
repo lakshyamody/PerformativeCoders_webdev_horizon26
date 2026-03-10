@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   LayoutDashboard, 
   Target, 
@@ -8,13 +8,32 @@ import {
   Settings,
   PanelLeftClose,
   PanelLeftOpen,
-  Zap
+  Zap,
+  Moon,
+  Sun
 } from 'lucide-react';
 import useDashboardStore from '../../store/dashboardStore';
 
 const Sidebar = () => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const { activeTab, setActiveTab } = useDashboardStore();
+
+  const [isDark, setIsDark] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches);
+    }
+    return true;
+  });
+
+  useEffect(() => {
+    if (isDark) {
+      document.documentElement.classList.add('dark');
+      localStorage.theme = 'dark';
+    } else {
+      document.documentElement.classList.remove('dark');
+      localStorage.theme = 'light';
+    }
+  }, [isDark]);
 
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -103,9 +122,18 @@ const Sidebar = () => {
                 <span className="text-xs text-gray-400">Pro Plan</span>
               </div>
             </div>
-            <button className="text-gray-400 hover:text-white">
-              <Settings size={18} />
-            </button>
+            <div className="flex items-center gap-1">
+              <button 
+                onClick={() => setIsDark(!isDark)}
+                className="text-gray-400 hover:text-white p-1.5 rounded-md hover:bg-white/10 transition-colors"
+                title="Toggle Theme"
+              >
+                {isDark ? <Sun size={18} /> : <Moon size={18} />}
+              </button>
+              <button className="text-gray-400 hover:text-white p-1.5 rounded-md hover:bg-white/10 transition-colors">
+                <Settings size={18} />
+              </button>
+            </div>
           </div>
         ) : (
           <div className="flex justify-center">

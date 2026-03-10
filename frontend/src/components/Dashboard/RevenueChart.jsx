@@ -5,11 +5,13 @@ import { Calendar } from 'lucide-react';
 
 export default function RevenueChart({ history }) {
 
+    const [timeRange, setTimeRange] = React.useState(30);
+
     // Format data for chart
-    const data = history.slice(-30).map(h => ({
+    const data = history.slice(-timeRange).map(h => ({
         time: h.time,
         revenue: h.revenue,
-        expenses: h.cashflow.monthlyExpenses / 30, // Rough estimate for a second teal line
+        expenses: h.cashflow?.monthlyExpenses ? h.cashflow.monthlyExpenses / 30 : 0, // Rough estimate for a second teal line
     }));
 
     const CustomTooltip = ({ active, payload, label }) => {
@@ -40,10 +42,18 @@ export default function RevenueChart({ history }) {
                     <h3 className="text-base font-semibold text-white">Revenue vs Expenses</h3>
                     <p className="text-sm text-gray-400 mt-1">Real-time financial performance</p>
                 </div>
-                <button className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-gray-300 border border-white/10 rounded-lg hover:bg-white/5 transition-colors">
-                    <Calendar size={14} />
-                    <span>Last 30 days</span>
-                </button>
+                <div className="relative">
+                    <select 
+                        className="appearance-none bg-[#111827] flex items-center gap-2 px-3 py-1.5 pr-8 text-xs font-medium text-gray-300 border border-white/10 rounded-lg hover:bg-white/5 transition-colors focus:outline-none focus:ring-1 focus:ring-[#6366f1]"
+                        value={timeRange}
+                        onChange={(e) => setTimeRange(Number(e.target.value))}
+                    >
+                        <option value={10}>Last 10 updates</option>
+                        <option value={30}>Last 30 updates</option>
+                        <option value={60}>Last 60 updates</option>
+                    </select>
+                    <Calendar size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" />
+                </div>
             </div>
 
             <div className="flex-1 h-[300px] w-full relative">

@@ -1,16 +1,54 @@
 import React from 'react';
-import { Download, Plus, Mic, MicPulse } from 'lucide-react';
+import { Download, Plus, Mic, RefreshCw } from 'lucide-react';
 import useDashboardStore from '../../store/dashboardStore';
 
+import { apiClient } from '../../api/apiClient';
+
 const TopBar = () => {
-  const { voicePanelOpen, toggleVoicePanel, connected, simulationMode, warRoomActive } = useDashboardStore();
+  const { 
+    voicePanelOpen, toggleVoicePanel, connected, 
+    simulationMode, warRoomActive, setSimulationMode, setWarRoomActive,
+    updateDashboard
+  } = useDashboardStore();
+
+  const [simLoading, setSimLoading] = React.useState(false);
+  const [refreshLoading, setRefreshLoading] = React.useState(false);
+
+  const handleRefresh = async () => {
+    try {
+      setRefreshLoading(true);
+      const data = await apiClient.getDashboard();
+      updateDashboard(data);
+    } catch (err) {
+      console.error('Failed to refresh dashboard:', err);
+    } finally {
+      setRefreshLoading(false);
+    }
+  };
+
+  const handleExportData = () => {
+    const currentState = useDashboardStore.getState();
+    const dataStr = JSON.stringify(currentState, null, 2);
+    const blob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `opspulse_export_${new Date().toISOString().slice(0,10)}.json`;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
 
   const handleSimulate = async () => {
     try {
-      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
-      await fetch(`${API_URL}/api/simulation/toggle`, { method: 'POST' });
+      setSimLoading(true);
+      const res = await apiClient.toggleSimulation();
+      setSimulationMode(res.active);
+      if (res.active) setWarRoomActive(true);
+      else setWarRoomActive(false);
     } catch (err) {
       console.error('Failed to toggle simulation:', err);
+    } finally {
+      setSimLoading(false);
     }
   };
 
@@ -34,7 +72,8 @@ const TopBar = () => {
           <div className="mr-4 flex items-center gap-2">
             <button 
               onClick={handleSimulate}
-              className={`px-3 py-1.5 rounded-md text-sm font-medium border flex items-center gap-2 transition-colors ${
+              disabled={simLoading}
+              className={`px-3 py-1.5 rounded-md text-sm font-medium border flex items-center gap-2 transition-colors disabled:opacity-50 ${
                 simulationMode 
                   ? 'bg-red-500/10 text-red-400 border-red-500/20 hover:bg-red-500/20' 
                   : 'bg-amber-500/10 text-amber-400 border-amber-500/20 hover:bg-amber-500/20'
@@ -49,13 +88,27 @@ const TopBar = () => {
         {(!simulationMode && !warRoomActive) && (
           <button 
             onClick={handleSimulate}
-            className="mr-4 px-3 py-1.5 rounded-md text-sm font-medium border border-white/10 text-gray-300 hover:bg-white/5 hover:text-white transition-colors"
+            disabled={simLoading}
+            className="mr-4 px-3 py-1.5 rounded-md text-sm font-medium border border-white/10 text-gray-300 hover:bg-white/5 hover:text-white transition-colors disabled:opacity-50"
           >
-            Simulate Crisis
+            {simLoading ? 'Simulating...' : 'Simulate Crisis'}
           </button>
         )}
 
-        <button className="hidden sm:flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-gray-300 border border-white/10 rounded-lg hover:bg-white/5 transition-colors">
+        <button 
+          onClick={handleRefresh}
+          disabled={refreshLoading}
+          className="hidden sm:flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-gray-300 border border-white/10 rounded-lg hover:bg-white/5 transition-colors disabled:opacity-50"
+          title="Refresh Dashboard"
+        >
+          <RefreshCw size={16} className={refreshLoading ? 'animate-spin' : ''} />
+          <span>Refresh</span>
+        </button>
+
+        <button 
+          onClick={handleExportData}
+          className="hidden sm:flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-gray-300 border border-white/10 rounded-lg hover:bg-white/5 transition-colors"
+        >
           <Download size={16} />
           <span>Export data</span>
         </button>

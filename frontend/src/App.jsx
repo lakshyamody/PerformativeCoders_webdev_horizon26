@@ -28,18 +28,7 @@ function App() {
     metrics
   } = useDashboardStore();
 
-  const [forecast, setForecast] = useState([]);
-  const bss = scores?.bss || 0;
 
-  // Fetch forecast when on strategy tab
-  useEffect(() => {
-    if (activeTab === 'strategy') {
-      fetch(`${API_URL}/api/strategy/forecast`)
-        .then(r => r.json())
-        .then(data => setForecast(data))
-        .catch(() => { });
-    }
-  }, [activeTab, scores]);
 
   const toggleSimulation = async () => {
     try {
@@ -68,7 +57,6 @@ function App() {
             {activeTab === 'strategy' && (
               <StrategyPanel
                 strategy={strategy}
-                forecast={forecast}
                 history={metricsHistory}
               />
             )}

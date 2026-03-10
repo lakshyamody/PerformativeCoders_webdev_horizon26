@@ -45,5 +45,7 @@ export function useVoiceInput() {
         setListening(false);
     }, []);
 
-    return { listening, transcript, startListening, stopListening, setTranscript };
+    const supported = ('webkitSpeechRecognition' in window) || ('SpeechRecognition' in window);
+
+    return { listening, transcript, startListening, stopListening, setTranscript, supported };
 }
