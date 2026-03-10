@@ -70,6 +70,7 @@ export default function Dashboard() {
                     badgeType="positive"
                     compact={settings.compactCards}
                     delay={0.1}
+                    source={metrics?.sales?.source || 'Simulated'}
                 />
                 <MetricCard 
                     title="Inventory Levels" 
@@ -79,6 +80,7 @@ export default function Dashboard() {
                     badgeType={metrics?.inventory?.lowStockCount > 0 ? 'warning' : 'neutral'}
                     compact={settings.compactCards}
                     delay={0.2}
+                    source={metrics?.inventory?.source || 'Simulated'}
                 />
                 <MetricCard 
                     title="Open Support Tickets" 
@@ -88,6 +90,7 @@ export default function Dashboard() {
                     badgeType={support > 30 ? 'negative' : 'neutral'}
                     compact={settings.compactCards}
                     delay={0.3}
+                    source={metrics?.support?.source || 'Simulated'}
                 />
             </div>
 

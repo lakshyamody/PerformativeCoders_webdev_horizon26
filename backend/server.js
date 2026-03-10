@@ -3,6 +3,7 @@ const http = require('http');
 const { Server } = require('socket.io');
 const cors = require('cors');
 const dotenv = require('dotenv');
+const crypto = require('crypto');
 
 dotenv.config();
 
@@ -45,6 +46,134 @@ let users = [
     { id: '2', name: 'Sarah Connor', email: 'sarah@example.com', role: 'Analyst', lastActive: '1 hr ago' },
     { id: '3', name: 'Mike Johnson', email: 'mike@example.com', role: 'Viewer', lastActive: '1 day ago' }
 ];
+
+// Webhooks State
+let registeredWebhooks = [];
+let internalSimulators = {};
+
+function getNestedValue(obj, path) {
+    return path.split('.').reduce((acc, part) => acc && acc[part], obj);
+}
+
+function processWebhookPayload(source, payload) {
+    let sourceName = source;
+    // For demo CRMs and ERPs
+    if (source === 'hubspot') {
+        sourceName = 'HubSpot';
+        if (payload.deals) {
+            const total = payload.deals.filter(d => d.dealstage === 'closedwon').reduce((sum, d) => sum + d.amount, 0);
+            currentState.metrics.sales.revenue = total;
+            currentState.metrics.sales.source = 'HubSpot';
+        }
+    } else if (source === 'salesforce') {
+        sourceName = 'Salesforce';
+        if (payload.sobject && payload.sobject.Opportunity) {
+            const opps = Array.isArray(payload.sobject.Opportunity) ? payload.sobject.Opportunity : [payload.sobject.Opportunity];
+            const total = opps.filter(o => o.StageName === 'Closed Won').reduce((sum, o) => sum + o.Amount, 0);
+            currentState.metrics.sales.revenue = total;
+            currentState.metrics.sales.source = 'Salesforce';
+        }
+    } else if (source === 'sap') {
+        sourceName = 'SAP';
+        if (payload.materialDocument && payload.materialDocument.items) {
+            const totalQty = payload.materialDocument.items.reduce((sum, item) => sum + item.quantity, 0);
+            currentState.metrics.inventory.totalUnits = totalQty;
+            currentState.metrics.inventory.source = 'SAP';
+        }
+    } else if (source === 'quickbooks') {
+        sourceName = 'QuickBooks';
+        if (payload.eventNotifications) {
+            let total = currentState.metrics.cashflow.available;
+            payload.eventNotifications.forEach(ev => {
+                if (ev.dataChangeEvent && ev.dataChangeEvent.entities) {
+                    ev.dataChangeEvent.entities.forEach(entity => {
+                        if (entity.name === 'Invoice') total += entity.amount;
+                        if (entity.name === 'Bill') total -= entity.amount;
+                    });
+                }
+            });
+            currentState.metrics.cashflow.available = total;
+            currentState.metrics.cashflow.source = 'QuickBooks';
+        }
+    } else {
+        // Custom Webhook
+        const webhook = registeredWebhooks.find(w => w.sourceId === source);
+        if (webhook) {
+            sourceName = webhook.name;
+            const val = getNestedValue(payload, webhook.fieldPath);
+            if (val !== undefined) {
+                if (webhook.targetMetric === 'Sales Revenue') {
+                    currentState.metrics.sales.revenue = Number(val);
+                    currentState.metrics.sales.source = webhook.name;
+                } else if (webhook.targetMetric === 'Inventory Level') {
+                    currentState.metrics.inventory.totalUnits = Number(val);
+                    currentState.metrics.inventory.source = webhook.name;
+                } else if (webhook.targetMetric === 'Support Tickets') {
+                    currentState.metrics.support.openTickets = Number(val);
+                    currentState.metrics.support.source = webhook.name;
+                } else if (webhook.targetMetric === 'Cash Flow') {
+                    currentState.metrics.cashflow.available = Number(val);
+                    currentState.metrics.cashflow.source = webhook.name;
+                }
+            }
+        }
+    }
+}
+
+function toggleSimulator(source, active) {
+    if (active) {
+        if (!internalSimulators[source]) {
+            internalSimulators[source] = setInterval(() => {
+                let payload = {};
+                if (source === 'hubspot') {
+                    payload = {
+                        deals: [
+                            { dealname: 'Acme Corp', amount: 45000 + (Math.random() - 0.5) * 5000, dealstage: 'closedwon', closedate: new Date() },
+                            { dealname: 'Global UI', amount: 12000 + (Math.random() - 0.5) * 2000, dealstage: 'closedwon', closedate: new Date() }
+                        ]
+                    };
+                } else if (source === 'salesforce') {
+                    payload = {
+                        sobject: {
+                            Opportunity: [
+                                { Amount: 50000 + (Math.random() - 0.5) * 8000, StageName: 'Closed Won' }
+                            ]
+                        }
+                    };
+                } else if (source === 'sap') {
+                    payload = {
+                        materialDocument: {
+                            items: [
+                                { material: 'A1', quantity: 1500 + Math.floor((Math.random() - 0.5) * 200) },
+                                { material: 'B2', quantity: 3000 + Math.floor((Math.random() - 0.5) * 400) }
+                            ]
+                        }
+                    };
+                } else if (source === 'quickbooks') {
+                    payload = {
+                        eventNotifications: [{
+                            dataChangeEvent: {
+                                entities: [
+                                    { name: 'Invoice', amount: 30000 + Math.random() * 5000 },
+                                    { name: 'Bill', amount: 20000 + Math.random() * 2000 }
+                                ]
+                            }
+                        }]
+                    };
+                }
+                processWebhookPayload(source, payload);
+            }, 3000);
+        }
+    } else {
+        if (internalSimulators[source]) {
+            clearInterval(internalSimulators[source]);
+            delete internalSimulators[source];
+            if (source === 'hubspot' || source === 'salesforce') delete currentState.metrics.sales.source;
+            if (source === 'sap') delete currentState.metrics.inventory.source;
+            if (source === 'quickbooks') delete currentState.metrics.cashflow.source;
+        }
+    }
+}
 
 // Custom Rules
 let customRules = [];
@@ -226,6 +355,82 @@ app.post('/api/rules', (req, res) => {
 app.delete('/api/rules/:id', (req, res) => {
     customRules = customRules.filter(r => r.id !== req.params.id);
     res.json({ success: true });
+});
+
+// Webhook Endpoints
+app.post('/api/webhooks/register', (req, res) => {
+    const { name, targetMetric, fieldPath } = req.body;
+    const sourceId = name.toLowerCase().replace(/[^a-z0-9]/g, '-');
+    const secret = crypto.randomBytes(32).toString('hex');
+    const newWebhook = {
+        id: Math.random().toString(36).substr(2, 9),
+        name,
+        sourceId,
+        targetMetric,
+        fieldPath,
+        secret,
+        url: `${req.protocol}://${req.get('host')}/api/webhooks/ingest/${sourceId}`,
+        createdAt: Date.now(),
+        lastEvents: []
+    };
+    registeredWebhooks.push(newWebhook);
+    res.json(newWebhook);
+});
+
+app.get('/api/webhooks/list', (req, res) => {
+    res.json(registeredWebhooks);
+});
+
+app.delete('/api/webhooks/:id', (req, res) => {
+    registeredWebhooks = registeredWebhooks.filter(w => w.id !== req.params.id);
+    res.json({ success: true });
+});
+
+app.post('/api/webhooks/ingest/:source', (req, res) => {
+    const { source } = req.params;
+    
+    const isStandardDemo = ['hubspot', 'salesforce', 'sap', 'quickbooks'].includes(source);
+
+    if (!isStandardDemo) {
+        const webhook = registeredWebhooks.find(w => w.sourceId === source);
+        if (!webhook) return res.status(404).json({ error: 'Webhook source not found' });
+
+        const signature = req.headers['x-webhook-signature'];
+        if (signature) {
+            const hmac = crypto.createHmac('sha256', webhook.secret);
+            const digest = hmac.update(JSON.stringify(req.body)).digest('hex');
+            if (signature !== digest) {
+                return res.status(401).json({ error: 'Invalid signature' });
+            }
+        }
+        webhook.lastEvents.unshift({
+            timestamp: Date.now(),
+            size: JSON.stringify(req.body).length,
+            status: 'success'
+        });
+        webhook.lastEvents = webhook.lastEvents.slice(0, 10);
+    }
+
+    processWebhookPayload(source, req.body);
+    // Send immediate dashboard update on push
+    io.emit('dashboard:update', currentState);
+    res.json({ success: true, message: 'Payload integrated' });
+});
+
+app.post('/api/webhooks/simulate/:source', (req, res) => {
+    const { source } = req.params;
+    const { active } = req.body;
+    toggleSimulator(source, active);
+    res.json({ success: true, active });
+});
+
+app.get('/api/webhooks/simulators', (req, res) => {
+    res.json({
+        hubspot: !!internalSimulators['hubspot'],
+        salesforce: !!internalSimulators['salesforce'],
+        sap: !!internalSimulators['sap'],
+        quickbooks: !!internalSimulators['quickbooks']
+    });
 });
 
 // AI Assistant

@@ -9,6 +9,7 @@ export default function MetricCard({
     badgeType = 'neutral', 
     compact = false,
     delay = 0,
+    source = '',
     onClick 
 }) {
     // Determine badge colors based on type
@@ -39,10 +40,15 @@ export default function MetricCard({
                 )}
             </div>
             
-            <div className="flex items-baseline gap-2">
-                <span className={`${compact ? 'text-xl' : 'text-3xl'} items-center font-bold text-white tracking-tight`}>
+            <div className="flex flex-col gap-0.5">
+                <span className={`${compact ? 'text-xl' : 'text-3xl'} font-bold text-white tracking-tight`}>
                     {value}
                 </span>
+                {source && (
+                    <span className="text-[10px] text-gray-500 font-medium tracking-wide">
+                        {source === 'Simulated' ? 'Simulated' : `via ${source}`}
+                    </span>
+                )}
             </div>
         </CardBase>
     );
