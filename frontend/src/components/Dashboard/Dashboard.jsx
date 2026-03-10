@@ -4,6 +4,7 @@ import useDashboardStore from '../../store/dashboardStore';
 import MetricCard from './MetricCard';
 import RevenueChart from './RevenueChart';
 import ProfitPanel from './ProfitPanel';
+import RuleManager from './RuleManager';
 import AlertFeed from '../AlertFeed/AlertFeed';
 import { Activity, CircleDollarSign, Package, Ticket, X } from 'lucide-react';
 
@@ -67,8 +68,9 @@ export default function Dashboard() {
                 <ProfitPanel history={history} bss={bss} />
             </div>
 
-            {/* Phase 4: Alert Feed */}
-            <div className="w-full mt-2">
+            {/* Phase 4: Rules & Alerts */}
+            <div className="w-full mt-2 space-y-4">
+                <RuleManager />
                 <AlertFeed alerts={alerts} />
             </div>
 

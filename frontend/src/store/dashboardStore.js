@@ -6,6 +6,7 @@ const useDashboardStore = create((set, get) => ({
     setConnected: (connected) => set({ connected }),
 
     // Dashboard data
+    isLoaded: false,
     metrics: null,
     scores: null,
     alerts: [],
@@ -17,6 +18,18 @@ const useDashboardStore = create((set, get) => ({
     setSimulationMode: (active) => set({ simulationMode: active }),
     strategy: null,
     timestamp: null,
+
+    // Automation Rules
+    customRules: [],
+    setCustomRules: (rules) => set({ customRules: rules }),
+
+    // Filters
+    activeFilters: {
+        severity: [],
+        vertical: [],
+        timeRange: 'All Time'
+    },
+    setActiveFilters: (filters) => set({ activeFilters: filters }),
 
     // UI state
     activeTab: 'dashboard',
@@ -50,6 +63,7 @@ const useDashboardStore = create((set, get) => ({
     updateDashboard: (data) => {
         const state = get();
         set({
+            isLoaded: true,
             metrics: data.metrics,
             scores: data.scores,
             alerts: data.alerts || [],

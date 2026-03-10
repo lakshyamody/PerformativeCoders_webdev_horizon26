@@ -10,7 +10,7 @@ function timeAgo(ts) {
 }
 
 export default function AlertFeed({ alerts = [] }) {
-    const dismissAlert = useDashboardStore(s => s.dismissAlert);
+    const { dismissAlert, activeFilters } = useDashboardStore();
     
     const getAlertStyles = (type) => {
         switch(type) {
@@ -41,6 +41,17 @@ export default function AlertFeed({ alerts = [] }) {
         }
     };
 
+    const filteredAlerts = alerts.filter(alert => {
+        if (activeFilters.severity.length > 0 && !activeFilters.severity.includes(alert.type.toLowerCase())) {
+            return false;
+        }
+        if (activeFilters.vertical.length > 0 && !activeFilters.vertical.includes(alert.source)) {
+            return false;
+        }
+        // Basic time filtering logic could go here based on activeFilters.timeRange
+        return true;
+    });
+
     return (
         <div className="bg-[#1a2236] border border-white/5 rounded-xl shadow-lg overflow-hidden flex flex-col">
             
@@ -49,24 +60,9 @@ export default function AlertFeed({ alerts = [] }) {
                 <div>
                     <h3 className="text-base font-semibold text-white flex items-center gap-2">
                         <span>Alerts Overview</span>
-                        <span className="px-2 py-0.5 rounded-full bg-indigo-500/10 text-[#6366f1] text-xs font-semibold">{alerts.length}</span>
+                        <span className="px-2 py-0.5 rounded-full bg-indigo-500/10 text-[#6366f1] text-xs font-semibold">{filteredAlerts.length}</span>
                     </h3>
                     <p className="text-sm text-gray-400 mt-1">Real-time system events and opportunities</p>
-                </div>
-                
-                <div className="flex items-center gap-3">
-                    <button className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-gray-300 border border-white/10 rounded-lg hover:bg-white/5 transition-colors">
-                        <Calendar size={14} />
-                        <span>Filter</span>
-                    </button>
-                    <button className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-gray-300 border border-white/10 rounded-lg hover:bg-white/5 transition-colors">
-                        <Download size={14} />
-                        <span>Export</span>
-                    </button>
-                    <button className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-white bg-[#6366f1] hover:bg-indigo-600 rounded-lg transition-colors shadow-sm shadow-indigo-500/20">
-                        <Plus size={14} />
-                        <span>Create rule</span>
-                    </button>
                 </div>
             </div>
 
@@ -84,14 +80,14 @@ export default function AlertFeed({ alerts = [] }) {
                     </thead>
                     <tbody>
                         <AnimatePresence mode="popLayout">
-                            {alerts.length === 0 ? (
+                            {filteredAlerts.length === 0 ? (
                                 <tr>
                                     <td colSpan="5" className="p-8 text-center text-gray-500 text-sm">
-                                        No active alerts — all systems nominal ✓
+                                        {alerts.length === 0 ? 'No active alerts — all systems nominal ✓' : 'No alerts match your current filters.'}
                                     </td>
                                 </tr>
                             ) : (
-                                alerts.slice(0, 15).map((alert, index) => {
+                                filteredAlerts.slice(0, 15).map((alert, index) => {
                                     const { icon: Icon, color, bg, border } = getAlertStyles(alert.type);
                                     
                                     return (

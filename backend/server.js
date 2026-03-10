@@ -46,13 +46,64 @@ let users = [
     { id: '3', name: 'Mike Johnson', email: 'mike@example.com', role: 'Viewer', lastActive: '1 day ago' }
 ];
 
+// Custom Rules
+let customRules = [];
+let ruleCooldowns = {};
+
+function evaluateCustomRules(metrics, scores) {
+    const alerts = [];
+    const now = Date.now();
+    
+    customRules.forEach(rule => {
+        let currentValue;
+        switch(rule.metric) {
+            case 'Sales Revenue': currentValue = metrics.sales.revenue; break;
+            case 'Inventory Level': currentValue = metrics.inventory.totalUnits; break;
+            case 'Support Tickets': currentValue = metrics.support.openTickets; break;
+            case 'Cash Flow': currentValue = metrics.cashflow.available; break;
+            case 'BSS Score': currentValue = scores.bss; break;
+            default: return;
+        }
+
+        let conditionMet = false;
+        const targetValue = parseFloat(rule.value);
+        switch(rule.operator) {
+            case 'drops below': conditionMet = currentValue < targetValue; break;
+            case 'rises above': conditionMet = currentValue > targetValue; break;
+            case 'changes by more than': conditionMet = false; break; // Requires history, stubbed for now
+        }
+
+        if (conditionMet) {
+            const cooldownKey = `rule_${rule.id}`;
+            if (!ruleCooldowns[cooldownKey] || now - ruleCooldowns[cooldownKey] > 15000) {
+                ruleCooldowns[cooldownKey] = now;
+                alerts.push({
+                    id: Math.random().toString(36).substr(2, 9),
+                    type: rule.severity.toLowerCase(),
+                    title: `Automation: ${rule.name}`,
+                    message: `${rule.metric} ${rule.operator} ${targetValue} (Current: ${currentValue.toFixed(0)})`,
+                    timestamp: Date.now(),
+                    active: true,
+                    ruleId: rule.id,
+                    source: 'Custom Rule'
+                });
+            }
+        }
+    });
+    return alerts;
+}
+
 function updateDashboard() {
     const metrics = simulationActive
         ? metricsGen.generateCrisisMetrics(currentState.metrics)
         : metricsGen.generateMetrics(currentState.metrics);
 
     const scores = scoringEngine.computeAllScores(metrics);
-    const newAlerts = alertEngine.generateAlerts(metrics, scores, currentState.alerts);
+    let newAlerts = alertEngine.generateAlerts(metrics, scores, currentState.alerts);
+    const ruleAlerts = evaluateCustomRules(metrics, scores);
+    
+    newAlerts = [...ruleAlerts, ...newAlerts];
+
     const strategy = strategyEngine.computeStrategy(metrics, scores);
     const warRoomActive = scores.bss > 70;
 
@@ -137,6 +188,26 @@ app.post('/api/users/invite', (req, res) => {
 
 app.delete('/api/users/:id', (req, res) => {
     users = users.filter(u => u.id !== req.params.id);
+    res.json({ success: true });
+});
+
+// Rules endpoints
+app.get('/api/rules', (req, res) => {
+    res.json(customRules);
+});
+
+app.post('/api/rules', (req, res) => {
+    const newRule = {
+        id: Math.random().toString(36).substr(2, 9),
+        ...req.body,
+        createdAt: Date.now()
+    };
+    customRules.push(newRule);
+    res.json(newRule);
+});
+
+app.delete('/api/rules/:id', (req, res) => {
+    customRules = customRules.filter(r => r.id !== req.params.id);
     res.json({ success: true });
 });
 

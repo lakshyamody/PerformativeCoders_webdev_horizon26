@@ -52,5 +52,15 @@ export const apiClient = {
     }),
     deleteUser: (id) => fetchWithHandling(`/api/users/${id}`, {
         method: 'DELETE'
+    }),
+
+    // Rules
+    getRules: () => fetchWithHandling('/api/rules'),
+    createRule: (data) => fetchWithHandling('/api/rules', {
+        method: 'POST',
+        body: JSON.stringify(data)
+    }),
+    deleteRule: (id) => fetchWithHandling(`/api/rules/${id}`, {
+        method: 'DELETE'
     })
 };
