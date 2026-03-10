@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useVoiceInput } from '../../hooks/useVoiceInput';
 import useDashboardStore from '../../store/dashboardStore';
+import { Trash2, X, Mic, Send, Loader2 } from 'lucide-react';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
 
@@ -12,7 +13,8 @@ export default function VoiceAssistant() {
         voiceMessages,
         addVoiceMessage,
         isTyping,
-        setIsTyping
+        setIsTyping,
+        clearVoiceMessages
     } = useDashboardStore();
 
     const [textInput, setTextInput] = useState('');
@@ -125,9 +127,18 @@ export default function VoiceAssistant() {
                             </motion.span>
                         )}
                     </div>
-                    <button className="voice-panel-close" onClick={() => setVoicePanelOpen(false)}>
-                        ✕
-                    </button>
+                    <div className="flex items-center gap-3">
+                        <button 
+                            className="p-1.5 hover:bg-white/10 rounded-lg text-gray-500 hover:text-red-400 transition-colors" 
+                            onClick={clearVoiceMessages}
+                            title="Clear Chat History"
+                        >
+                            <Trash2 size={16} />
+                        </button>
+                        <button className="p-1.5 hover:bg-white/10 rounded-lg text-gray-500 hover:text-white transition-colors" onClick={() => setVoicePanelOpen(false)}>
+                            <X size={18} />
+                        </button>
+                    </div>
                 </div>
 
                 <div className="voice-messages">
@@ -164,11 +175,11 @@ export default function VoiceAssistant() {
                 <form className="voice-input-area" onSubmit={handleSubmit}>
                     <button
                         type="button"
-                        className={`voice-btn ${listening ? 'listening' : ''}`}
+                        className={`p-2 rounded-lg flex items-center justify-center transition-all ${listening ? 'bg-red-500/20 text-red-500 animate-pulse' : 'bg-white/5 text-gray-400 hover:bg-white/10'}`}
                         onClick={listening ? stopListening : startListening}
-                        style={{ width: 34, height: 34, fontSize: 16, flexShrink: 0 }}
+                        style={{ width: 40, height: 40, flexShrink: 0 }}
                     >
-                        🎙️
+                        <Mic size={20} className={listening ? 'animate-bounce' : ''} />
                     </button>
                     <input
                         ref={inputRef}
@@ -179,8 +190,8 @@ export default function VoiceAssistant() {
                         onChange={(e) => setTextInput(e.target.value)}
                         disabled={listening}
                     />
-                    <button type="submit" className="voice-send-btn">
-                        ➤
+                    <button type="submit" className="p-2 bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg transition-colors flex items-center justify-center shadow-lg shadow-indigo-500/20" style={{ width: 40, height: 40 }}>
+                        <Send size={18} />
                     </button>
                 </form>
             </motion.div>

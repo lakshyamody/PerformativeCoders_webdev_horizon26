@@ -8,10 +8,10 @@ export default function Settings() {
   const [saved, setSaved] = useState(false);
   const navigate = useNavigate();
 
-  const { settings, updateSettings, setOnboardingComplete } = useDashboardStore();
+  const { settings, updateSettings, setOnboardingComplete, businessProfile } = useDashboardStore();
 
   const [formState, setFormState] = useState({
-    businessName: settings.businessName || 'Acme Corp',
+    businessName: settings.businessName || businessProfile.businessName || 'Acme Corp',
     timezone: settings.timezone || 'UTC',
     currency: settings.currency || 'INR',
     emailAlerts: true,

@@ -11,7 +11,9 @@ const TopBar = () => {
     simulationMode, warRoomActive, setSimulationMode, setWarRoomActive,
     updateDashboard,
     voiceAssistantEnabled,
-    setReportModalOpen
+    setReportModalOpen,
+    settings,
+    businessProfile
   } = useDashboardStore();
 
   const [simLoading, setSimLoading] = React.useState(false);
@@ -45,7 +47,9 @@ const TopBar = () => {
     <header className="h-16 px-6 sm:px-8 border-b border-white/5 flex items-center justify-between bg-[#0d1117]/80 backdrop-blur-md sticky top-0 z-20">
       
       <div className="flex flex-col">
-        <h1 className="text-lg font-semibold text-white">OpsPulse Command Center</h1>
+        <h1 className="text-lg font-semibold text-white">
+          {settings.businessName || businessProfile.businessName || 'OpsPulse Command Center'}
+        </h1>
         <p className="text-xs text-gray-400 flex items-center gap-2">
           Real-time operations intelligence
           <span className="flex items-center gap-1.5 ml-2">

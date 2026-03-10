@@ -87,6 +87,13 @@ const useDashboardStore = create((set, get) => ({
     })),
     isTyping: false,
     setIsTyping: (t) => set({ isTyping: t }),
+    clearVoiceMessages: () => set({
+        voiceMessages: [{
+            role: 'assistant',
+            text: "Hello! I'm OpsPulse AI. Ask me anything about your business — \"Why is my stress score high?\", \"Restock Product A\", or \"Give me a morning brief.\"",
+            actions: []
+        }]
+    }),
 
     // History for charts
     metricsHistory: [],
