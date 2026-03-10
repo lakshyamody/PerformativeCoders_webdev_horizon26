@@ -41,20 +41,6 @@ const TopBar = () => {
     URL.revokeObjectURL(url);
   };
 
-  const handleSimulate = async () => {
-    try {
-      setSimLoading(true);
-      const res = await apiClient.toggleSimulation();
-      setSimulationMode(res.active);
-      if (res.active) setWarRoomActive(true);
-      else setWarRoomActive(false);
-    } catch (err) {
-      console.error('Failed to toggle simulation:', err);
-    } finally {
-      setSimLoading(false);
-    }
-  };
-
   return (
     <header className="h-16 px-6 sm:px-8 border-b border-white/5 flex items-center justify-between bg-[#0d1117]/80 backdrop-blur-md sticky top-0 z-20">
       
@@ -70,32 +56,14 @@ const TopBar = () => {
       </div>
 
       <div className="flex items-center gap-3">
-        {/* Simulation / War Room indicator */}
+        {/* War Room indicator */}
         {(simulationMode || warRoomActive) && (
           <div className="mr-4 flex items-center gap-2">
-            <button 
-              onClick={handleSimulate}
-              disabled={simLoading}
-              className={`px-3 py-1.5 rounded-md text-sm font-medium border flex items-center gap-2 transition-colors disabled:opacity-50 ${
-                simulationMode 
-                  ? 'bg-red-500/10 text-red-400 border-red-500/20 hover:bg-red-500/20' 
-                  : 'bg-amber-500/10 text-amber-400 border-amber-500/20 hover:bg-amber-500/20'
-              }`}
-            >
-              <span className={`w-2 h-2 rounded-full ${simulationMode ? 'bg-red-500' : 'bg-amber-500'} animate-pulse`}></span>
-              {simulationMode ? 'Stop Crisis Sim' : 'War Room Active'}
-            </button>
+            <span className="px-3 py-1.5 rounded-md text-sm font-medium border flex items-center gap-2 bg-red-500/10 text-red-400 border-red-500/20">
+              <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
+              War Room Active
+            </span>
           </div>
-        )}
-        
-        {(!simulationMode && !warRoomActive) && (
-          <button 
-            onClick={handleSimulate}
-            disabled={simLoading}
-            className="mr-4 px-3 py-1.5 rounded-md text-sm font-medium border border-white/10 text-gray-300 hover:bg-white/5 hover:text-white transition-colors disabled:opacity-50"
-          >
-            {simLoading ? 'Simulating...' : 'Simulate Crisis'}
-          </button>
         )}
 
         <button 

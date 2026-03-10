@@ -429,6 +429,16 @@ app.post('/api/settings/profile', (req, res) => {
 
 app.post('/api/settings/complete', (req, res) => {
     // Flag to mark onboarding completion. Currently just responds with success.
+    
+    // Automatically trigger a crisis simulation 2 minutes after onboarding is complete
+    setTimeout(() => {
+        if (!simulationActive) {
+            simulationActive = true;
+            console.log('Automated Crisis Simulation Triggered!');
+            io.emit('dashboard:update', currentState);
+        }
+    }, 120000);
+
     res.json({ success: true });
 });
 
