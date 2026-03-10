@@ -61,6 +61,19 @@ const useDashboardStore = create((set, get) => ({
     setVoicePanelOpen: (open) => set({ voicePanelOpen: open }),
     toggleVoicePanel: () => set((s) => ({ voicePanelOpen: !s.voicePanelOpen })),
 
+    // Onboarding State
+    onboardingComplete: typeof window !== 'undefined' ? (localStorage.getItem('opspulse_onboarding') === 'true') : false,
+    setOnboardingComplete: (complete) => set(() => {
+        if (typeof window !== 'undefined') localStorage.setItem('opspulse_onboarding', complete);
+        return { onboardingComplete: complete };
+    }),
+
+    businessProfile: {},
+    setBusinessProfile: (profile) => set({ businessProfile: profile }),
+
+    connectedIntegrations: [],
+    setConnectedIntegrations: (integrations) => set({ connectedIntegrations: integrations }),
+
     // Voice messages
     voiceMessages: [
         {

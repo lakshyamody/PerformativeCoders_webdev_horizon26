@@ -84,9 +84,28 @@ class ScoringEngine {
         return Math.min(cashflowRisk, 100);
     }
 
-    computeBSS(salesRisk, invRisk, supportRisk, cfRisk) {
+    computeBSS(salesRisk, invRisk, supportRisk, cfRisk, profile = {}) {
+        let weights = { sales: 0.35, inv: 0.30, support: 0.20, cf: 0.15 };
+        
+        if (profile && profile.industry) {
+            switch(profile.industry.toLowerCase()) {
+                case 'retail':
+                    weights = { sales: 0.30, inv: 0.40, support: 0.15, cf: 0.15 };
+                    break;
+                case 'saas':
+                    weights = { sales: 0.25, inv: 0.05, support: 0.40, cf: 0.30 };
+                    break;
+                case 'manufacturing':
+                    weights = { sales: 0.20, inv: 0.45, support: 0.10, cf: 0.25 };
+                    break;
+                case 'services':
+                    weights = { sales: 0.45, inv: 0.05, support: 0.25, cf: 0.25 };
+                    break;
+            }
+        }
+
         // Base Score
-        const baseBss = (0.35 * salesRisk) + (0.30 * invRisk) + (0.20 * supportRisk) + (0.15 * cfRisk);
+        const baseBss = (weights.sales * salesRisk) + (weights.inv * invRisk) + (weights.support * supportRisk) + (weights.cf * cfRisk);
         
         const maxRisk = Math.max(salesRisk, invRisk, supportRisk, cfRisk);
         
@@ -103,12 +122,12 @@ class ScoringEngine {
         return Math.min(Math.max(bss, 0), 100);
     }
 
-    computeAllScores(metrics, history = []) {
+    computeAllScores(metrics, history = [], profile = {}) {
         const sales = this.computeSalesRisk(metrics, history);
         const inventory = this.computeInventoryRisk(metrics);
         const support = this.computeSupportRisk(metrics);
         const cashflow = this.computeCashflowRisk(metrics);
-        const bss = this.computeBSS(sales, inventory, support, cashflow);
+        const bss = this.computeBSS(sales, inventory, support, cashflow, profile);
         return { bss, sales, inventory, support, cashflow };
     }
 }

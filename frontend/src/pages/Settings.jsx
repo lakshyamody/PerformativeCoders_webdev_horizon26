@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
-import { Settings2, Bell, Shield, SlidersHorizontal, Save, Check } from 'lucide-react';
+import { Settings2, Bell, Shield, SlidersHorizontal, Save, Check, RefreshCcw } from 'lucide-react';
 import useDashboardStore from '../store/dashboardStore';
+import { useNavigate } from 'react-router-dom';
 
 export default function Settings() {
   const [activeTab, setActiveTab] = useState('general');
   const [saved, setSaved] = useState(false);
+  const navigate = useNavigate();
 
-  const { settings, updateSettings } = useDashboardStore();
+  const { settings, updateSettings, setOnboardingComplete } = useDashboardStore();
 
   const [formState, setFormState] = useState({
     businessName: settings.businessName || 'Acme Corp',
@@ -245,6 +247,26 @@ export default function Settings() {
                 <button type="button" className="px-4 py-2 bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 rounded-lg text-sm font-medium hover:bg-indigo-500/20 transition-colors">
                   View Audit Logs
                 </button>
+              </div>
+
+              <div className="pt-8 border-t border-red-500/20 mt-8">
+                <h4 className="font-semibold text-red-500 text-sm mb-2">Danger Zone</h4>
+                <div className="flex items-center justify-between p-4 bg-red-500/5 border border-red-500/10 rounded-xl">
+                  <div>
+                    <h5 className="font-medium text-white text-sm">Reset Onboarding</h5>
+                    <p className="text-xs text-gray-400 mt-1">Clears dashboard initialization and returns to setup flow.</p>
+                  </div>
+                  <button 
+                    type="button"
+                    onClick={() => {
+                      setOnboardingComplete(false);
+                      navigate('/onboarding/welcome');
+                    }}
+                    className="flex items-center gap-2 px-3 py-1.5 bg-red-500/10 text-red-400 hover:bg-red-500/20 hover:text-red-300 rounded text-xs font-semibold transition-colors border border-red-500/20"
+                  >
+                    <RefreshCcw size={14} /> Factory Reset
+                  </button>
+                </div>
               </div>
             </div>
           )}

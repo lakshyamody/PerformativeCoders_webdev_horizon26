@@ -23,6 +23,27 @@ export default function Dashboard() {
 
     const [bssModalOpen, setBssModalOpen] = useState(false);
     const [loadingHistory, setLoadingHistory] = useState(false);
+    
+    // Initializing state for first load after onboarding
+    const hasSeenDashboardInit = useDashboardStore((s) => s.hasSeenDashboardInit);
+    const setHasSeenDashboardInit = useDashboardStore((s) => s.setHasSeenDashboardInit);
+    const businessProfile = useDashboardStore((s) => s.businessProfile);
+    
+    const [initializing, setInitializing] = useState(!hasSeenDashboardInit);
+    const [showWelcomeToast, setShowWelcomeToast] = useState(false);
+
+    useEffect(() => {
+        if (initializing) {
+            const timer = setTimeout(() => {
+                setInitializing(false);
+                setHasSeenDashboardInit(true);
+                setShowWelcomeToast(true);
+                
+                setTimeout(() => setShowWelcomeToast(false), 5000);
+            }, 2000);
+            return () => clearTimeout(timer);
+        }
+    }, [initializing, setHasSeenDashboardInit]);
 
     useEffect(() => {
         if (selectedTimeRange !== 'live') {
@@ -174,6 +195,39 @@ export default function Dashboard() {
                                 ))}
                             </div>
                         </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            {/* Initialization Overlay */}
+            <AnimatePresence>
+                {initializing && (
+                    <motion.div 
+                        initial={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-background"
+                    >
+                        <div className="w-16 h-16 border-4 border-indigo-500/20 border-t-indigo-500 rounded-full animate-spin mb-6"></div>
+                        <h2 className="text-xl font-bold text-white mb-2">Initializing Command Center</h2>
+                        <p className="text-gray-400">Syncing data streams for {businessProfile?.name || 'your business'}...</p>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            {/* Welcome Toast */}
+            <AnimatePresence>
+                {showWelcomeToast && (
+                    <motion.div 
+                        initial={{ opacity: 0, x: 50 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: 50 }}
+                        className="fixed top-20 right-8 z-50 bg-[#111827] border border-emerald-500/30 shadow-[0_10px_40px_-10px_rgba(16,185,129,0.3)] text-white px-5 py-4 rounded-xl flex flex-col gap-1 max-w-sm"
+                    >
+                        <div className="flex items-center gap-2 mb-1">
+                            <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></div>
+                            <span className="font-bold text-sm">System Online</span>
+                        </div>
+                        <p className="text-sm text-gray-300">Welcome, <span className="text-white font-semibold">{businessProfile?.name || 'Commander'}</span>. Your command center is live.</p>
                     </motion.div>
                 )}
             </AnimatePresence>

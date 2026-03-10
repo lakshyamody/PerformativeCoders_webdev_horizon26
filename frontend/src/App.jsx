@@ -13,36 +13,25 @@ import Users from './pages/Users';
 import Pricing from './pages/Pricing';
 import Integrations from './pages/Integrations';
 import Settings from './pages/Settings';
+import Onboarding from './pages/Onboarding';
 import './index.css';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
 
-function App() {
-  useWebSocket();
+const ProtectedRoute = ({ children }) => {
+  const onboardingComplete = useDashboardStore(s => s.onboardingComplete);
+  if (!onboardingComplete) return <Navigate to="/onboarding/welcome" replace />;
+  return children;
+};
 
+function MainApp() {
   const {
-    scores,
-    connected,
-    warRoomActive,
-    simulationMode,
-    voicePanelOpen,
-    toggleVoicePanel,
     strategy,
     metricsHistory,
-    metrics,
     settings,
+    warRoomActive,
     voiceAssistantEnabled
   } = useDashboardStore();
-
-
-
-  const toggleSimulation = async () => {
-    try {
-      await fetch(`${API_URL}/api/simulation/toggle`, { method: 'POST' });
-    } catch (err) {
-      console.error('Failed to toggle simulation:', err);
-    }
-  };
 
   return (
     <div className="flex h-screen overflow-hidden bg-background text-text-primary">
@@ -82,6 +71,20 @@ function App() {
       <ReportModal />
 
     </div>
+  );
+}
+
+function App() {
+  useWebSocket();
+  return (
+    <Routes>
+      <Route path="/onboarding/*" element={<Onboarding />} />
+      <Route path="/*" element={
+        <ProtectedRoute>
+          <MainApp />
+        </ProtectedRoute>
+      } />
+    </Routes>
   );
 }
 

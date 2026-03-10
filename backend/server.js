@@ -47,6 +47,8 @@ let users = [
     { id: '3', name: 'Mike Johnson', email: 'mike@example.com', role: 'Viewer', lastActive: '1 day ago' }
 ];
 
+let businessProfile = {};
+
 // Webhooks State
 let registeredWebhooks = [];
 let internalSimulators = {};
@@ -227,7 +229,7 @@ function updateDashboard() {
         ? metricsGen.generateCrisisMetrics(currentState.metrics)
         : metricsGen.generateMetrics(currentState.metrics);
 
-    const scores = scoringEngine.computeAllScores(metrics, metricsGen.history);
+    const scores = scoringEngine.computeAllScores(metrics, metricsGen.history, businessProfile);
     
     // Patch the synthetic bss on the latest history entry
     if (metricsGen.history && metricsGen.history.length > 0) {
@@ -383,6 +385,16 @@ app.get('/api/webhooks/list', (req, res) => {
 
 app.delete('/api/webhooks/:id', (req, res) => {
     registeredWebhooks = registeredWebhooks.filter(w => w.id !== req.params.id);
+    res.json({ success: true });
+});
+
+app.post('/api/settings/profile', (req, res) => {
+    businessProfile = req.body;
+    res.json({ success: true, profile: businessProfile });
+});
+
+app.post('/api/settings/complete', (req, res) => {
+    // Flag to mark onboarding completion. Currently just responds with success.
     res.json({ success: true });
 });
 
