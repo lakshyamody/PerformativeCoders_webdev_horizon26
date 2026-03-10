@@ -98,7 +98,7 @@ function updateDashboard() {
         ? metricsGen.generateCrisisMetrics(currentState.metrics)
         : metricsGen.generateMetrics(currentState.metrics);
 
-    const scores = scoringEngine.computeAllScores(metrics);
+    const scores = scoringEngine.computeAllScores(metrics, metricsGen.history);
     
     // Patch the synthetic bss on the latest history entry
     if (metricsGen.history && metricsGen.history.length > 0) {
