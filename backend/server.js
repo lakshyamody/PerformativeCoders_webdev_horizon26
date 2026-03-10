@@ -39,6 +39,13 @@ let currentState = {
 // Simulation mode
 let simulationActive = false;
 
+// Users Mock Data
+let users = [
+    { id: '1', name: 'John Smith', email: 'john@example.com', role: 'Admin', lastActive: '2 mins ago' },
+    { id: '2', name: 'Sarah Connor', email: 'sarah@example.com', role: 'Analyst', lastActive: '1 hr ago' },
+    { id: '3', name: 'Mike Johnson', email: 'mike@example.com', role: 'Viewer', lastActive: '1 day ago' }
+];
+
 function updateDashboard() {
     const metrics = simulationActive
         ? metricsGen.generateCrisisMetrics(currentState.metrics)
@@ -107,6 +114,30 @@ app.post('/api/simulation/toggle', (req, res) => {
 
 app.get('/api/simulation/status', (req, res) => {
     res.json({ active: simulationActive });
+});
+
+// Users
+app.get('/api/users', (req, res) => {
+    res.json(users);
+});
+
+app.post('/api/users/invite', (req, res) => {
+    const { email, role } = req.body;
+    const name = email.split('@')[0];
+    const newUser = {
+        id: Math.random().toString(36).substr(2, 9),
+        name: name.charAt(0).toUpperCase() + name.slice(1),
+        email,
+        role: role || 'Viewer',
+        lastActive: 'Just now'
+    };
+    users.push(newUser);
+    res.json(newUser);
+});
+
+app.delete('/api/users/:id', (req, res) => {
+    users = users.filter(u => u.id !== req.params.id);
+    res.json({ success: true });
 });
 
 // AI Assistant

@@ -42,5 +42,15 @@ export const apiClient = {
 
     // Alerts & Metrics
     getAlerts: () => fetchWithHandling('/api/alerts/active'),
-    getMetricsHistory: (range) => fetchWithHandling(`/api/metrics/history?range=${range}`)
+    getMetricsHistory: (range) => fetchWithHandling(`/api/metrics/history?range=${range}`),
+
+    // Users
+    getUsers: () => fetchWithHandling('/api/users'),
+    inviteUser: (data) => fetchWithHandling('/api/users/invite', {
+        method: 'POST',
+        body: JSON.stringify(data)
+    }),
+    deleteUser: (id) => fetchWithHandling(`/api/users/${id}`, {
+        method: 'DELETE'
+    })
 };

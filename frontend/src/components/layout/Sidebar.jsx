@@ -12,11 +12,14 @@ import {
   Moon,
   Sun
 } from 'lucide-react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import useDashboardStore from '../../store/dashboardStore';
 
 const Sidebar = () => {
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const { activeTab, setActiveTab } = useDashboardStore();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const currentPath = location.pathname.substring(1) || 'dashboard';
 
   const [isDark, setIsDark] = useState(() => {
     if (typeof window !== 'undefined') {
@@ -86,14 +89,12 @@ const Sidebar = () => {
       {/* Navigation */}
       <nav className="flex-1 px-3 py-6 space-y-1">
         {navItems.map((item) => {
-          const isActive = activeTab === item.id || (item.id !== 'dashboard' && item.id !== 'strategy' && false);
+          const isActive = currentPath === item.id;
           return (
             <button
               key={item.id}
               onClick={() => {
-                if(item.id === 'dashboard' || item.id === 'strategy') {
-                  setActiveTab(item.id);
-                }
+                navigate(`/${item.id}`);
               }}
               className={`flex items-center w-full px-3 py-2.5 rounded-lg transition-colors group ${
                 isActive 
