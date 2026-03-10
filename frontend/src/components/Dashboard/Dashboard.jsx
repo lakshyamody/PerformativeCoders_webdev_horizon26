@@ -13,6 +13,7 @@ export default function Dashboard() {
     const scores = useDashboardStore((s) => s.scores);
     const alerts = useDashboardStore((s) => s.alerts);
     const history = useDashboardStore((s) => s.metricsHistory);
+    const settings = useDashboardStore((s) => s.settings);
 
     const [bssModalOpen, setBssModalOpen] = useState(false);
 
@@ -26,13 +27,14 @@ export default function Dashboard() {
     return (
         <div className="flex flex-col gap-6 w-full animate-in fade-in duration-500">
             {/* Phase 2: Metric Cards Row */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 ${settings.compactCards ? 'gap-4' : 'gap-6'}`}>
                 <MetricCard 
                     title="Business Stress Score" 
                     value={Math.round(bss)} 
                     icon={Activity} 
                     badgeValue={bss > 70 ? 'CRITICAL' : bss > 40 ? 'WARNING' : 'HEALTHY'}
                     badgeType={bss > 70 ? 'negative' : bss > 40 ? 'warning' : 'positive'}
+                    compact={settings.compactCards}
                     delay={0}
                     onClick={() => setBssModalOpen(true)}
                 />
@@ -42,6 +44,7 @@ export default function Dashboard() {
                     icon={CircleDollarSign} 
                     badgeValue="+8.2%"
                     badgeType="positive"
+                    compact={settings.compactCards}
                     delay={0.1}
                 />
                 <MetricCard 
@@ -50,6 +53,7 @@ export default function Dashboard() {
                     icon={Package} 
                     badgeValue={metrics?.inventory?.lowStockCount > 0 ? `${metrics.inventory.lowStockCount} Low` : 'Optimal'}
                     badgeType={metrics?.inventory?.lowStockCount > 0 ? 'warning' : 'neutral'}
+                    compact={settings.compactCards}
                     delay={0.2}
                 />
                 <MetricCard 
@@ -58,6 +62,7 @@ export default function Dashboard() {
                     icon={Ticket} 
                     badgeValue={support > 30 ? 'High Volume' : 'Normal'}
                     badgeType={support > 30 ? 'negative' : 'neutral'}
+                    compact={settings.compactCards}
                     delay={0.3}
                 />
             </div>

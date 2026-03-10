@@ -1,6 +1,7 @@
 import React from 'react';
 import { Download, Plus, Mic, RefreshCw } from 'lucide-react';
 import useDashboardStore from '../../store/dashboardStore';
+import HeaderControls from './HeaderControls';
 
 import { apiClient } from '../../api/apiClient';
 
@@ -8,7 +9,8 @@ const TopBar = () => {
   const { 
     voicePanelOpen, toggleVoicePanel, connected, 
     simulationMode, warRoomActive, setSimulationMode, setWarRoomActive,
-    updateDashboard
+    updateDashboard,
+    voiceAssistantEnabled
   } = useDashboardStore();
 
   const [simLoading, setSimLoading] = React.useState(false);
@@ -119,18 +121,22 @@ const TopBar = () => {
         </button>
 
         <div className="w-px h-6 bg-white/10 mx-1"></div>
-
-        <button 
-          onClick={toggleVoicePanel}
-          className={`flex items-center justify-center w-9 h-9 rounded-full transition-all ${
-            voicePanelOpen 
-              ? 'bg-indigo-500/20 text-[#6366f1] ring-2 ring-indigo-500/30 ring-offset-2 ring-offset-[#0d1117] animate-pulse' 
-              : 'bg-white/5 text-gray-300 hover:bg-white/10'
-          }`}
-          title="OpsPulse AI Assistant"
-        >
-          <Mic size={18} />
-        </button>
+        <HeaderControls />
+        <div className="w-px h-6 bg-white/10 mx-1"></div>
+        
+        {voiceAssistantEnabled && (
+          <button 
+            onClick={toggleVoicePanel}
+            className={`flex items-center justify-center w-9 h-9 rounded-full transition-all ${
+              voicePanelOpen 
+                ? 'bg-indigo-500/20 text-[#6366f1] ring-2 ring-indigo-500/30 ring-offset-2 ring-offset-[#0d1117] animate-pulse' 
+                : 'bg-white/5 text-gray-300 hover:bg-white/10'
+            }`}
+            title="OpsPulse AI Assistant"
+          >
+            <Mic size={18} />
+          </button>
+        )}
       </div>
       
     </header>

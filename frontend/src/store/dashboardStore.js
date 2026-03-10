@@ -32,6 +32,24 @@ const useDashboardStore = create((set, get) => ({
     setActiveFilters: (filters) => set({ activeFilters: filters }),
 
     // UI state
+    theme: typeof window !== 'undefined' ? (localStorage.getItem('opspulse_theme') || 'dark') : 'dark',
+    toggleTheme: () => set((s) => {
+        const newTheme = s.theme === 'dark' ? 'light' : 'dark';
+        if (typeof window !== 'undefined') localStorage.setItem('opspulse_theme', newTheme);
+        return { theme: newTheme };
+    }),
+
+    settings: {
+        showStrategy: true,
+        showAnimations: true,
+        compactCards: false,
+        updateFreq: 3
+    },
+    updateSettings: (newSettings) => set((s) => ({ settings: { ...s.settings, ...newSettings } })),
+
+    voiceAssistantEnabled: true,
+    setVoiceAssistantEnabled: (enabled) => set({ voiceAssistantEnabled: enabled }),
+
     activeTab: 'dashboard',
     setActiveTab: (tab) => set({ activeTab: tab }),
 

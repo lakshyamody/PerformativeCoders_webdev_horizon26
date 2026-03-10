@@ -29,8 +29,14 @@ export function useWebSocket() {
             setConnected(false);
         });
 
+        let lastUpdateTime = 0;
         socket.on('dashboard:update', (data) => {
-            updateDashboard(data);
+            const freq = useDashboardStore.getState().settings?.updateFreq || 3;
+            const now = Date.now();
+            if (now - lastUpdateTime >= (freq * 1000) - 100) {
+                lastUpdateTime = now;
+                updateDashboard(data);
+            }
         });
 
         return () => {

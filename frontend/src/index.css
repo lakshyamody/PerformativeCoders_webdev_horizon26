@@ -20,6 +20,54 @@
   }
 }
 
+/* --- THEME SYSTEM --- */
+:root.dark {
+  --theme-bg-body: #0d1117;
+  --theme-bg-sidebar: #111827;
+  --theme-bg-card: #1a2236;
+  --theme-text-primary: #ffffff;
+  --theme-text-muted: #9ca3af;
+  --theme-border: rgba(255, 255, 255, 0.05);
+  --theme-border-strong: rgba(255, 255, 255, 0.1);
+  --theme-ring: rgba(255, 255, 255, 0.1);
+}
+
+:root:not(.dark) {
+  --theme-bg-body: #f1f5f9;       
+  --theme-bg-sidebar: #ffffff;    
+  --theme-bg-card: #ffffff;       
+  --theme-text-primary: #0f172a;  
+  --theme-text-muted: #64748b;    
+  --theme-border: #e2e8f0;        
+  --theme-border-strong: #cbd5e1; 
+  --theme-ring: rgba(0, 0, 0, 0.1);
+}
+
+/* Light Theme Overrides for hardcoded Tailwind Arbitrary Classes */
+:root:not(.dark) .bg-\[\#0d1117\],
+:root:not(.dark) .bg-\[\#0d1117\]\/80 { background-color: var(--theme-bg-body) !important; }
+:root:not(.dark) .bg-\[\#111827\],
+:root:not(.dark) .bg-\[\#111827\]\/80 { background-color: var(--theme-bg-sidebar) !important; }
+:root:not(.dark) .bg-\[\#1a2236\],
+:root:not(.dark) .bg-\[\#1a2236\]\/80 { background-color: var(--theme-bg-card) !important; }
+
+:root:not(.dark) .text-white { color: var(--theme-text-primary) !important; }
+:root:not(.dark) .text-gray-400 { color: var(--theme-text-muted) !important; }
+:root:not(.dark) .text-gray-300 { color: var(--theme-text-primary) !important; }
+
+:root:not(.dark) .border-white\/5 { border-color: var(--theme-border) !important; }
+:root:not(.dark) .border-white\/10 { border-color: var(--theme-border-strong) !important; }
+:root:not(.dark) .border-white\/20 { border-color: var(--theme-border-strong) !important; }
+
+:root:not(.dark) .divide-white\/5 { border-color: var(--theme-border) !important; }
+:root:not(.dark) .bg-white\/5 { background-color: rgba(0,0,0,0.05) !important; }
+:root:not(.dark) .bg-white\/10 { background-color: rgba(0,0,0,0.1) !important; }
+:root:not(.dark) .hover\:bg-white\/5:hover { background-color: rgba(0,0,0,0.05) !important; }
+:root:not(.dark) .hover\:bg-white\/10:hover { background-color: rgba(0,0,0,0.1) !important; }
+:root:not(.dark) .hover\:bg-white\/\[0\.02\]:hover { background-color: rgba(0,0,0,0.02) !important; }
+:root:not(.dark) .hover\:text-white:hover { color: #000 !important; }
+/* -------------------- */
+
 /* Base custom classes to match previous styling without completely breaking components not yet converted */
 .live-dot {
   width: 8px;

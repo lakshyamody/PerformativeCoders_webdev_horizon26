@@ -6,6 +6,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="OpsPulse - AI-Powered Business Operations Command Center. Real-time dashboard with BSS scoring, voice AI assistant, and grand strategy engine for SMBs." />
     <title>OpsPulse — AI Command Center</title>
+    <script>
+      (function() {
+        try {
+          var theme = localStorage.getItem('opspulse_theme');
+          if (theme === 'dark' || (!theme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+          } else {
+            document.documentElement.classList.remove('dark');
+          }
+        } catch (e) {}
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

@@ -20,27 +20,11 @@ const Sidebar = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const currentPath = location.pathname.substring(1) || 'dashboard';
-
-  const [isDark, setIsDark] = useState(() => {
-    if (typeof window !== 'undefined') {
-      return localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches);
-    }
-    return true;
-  });
-
-  useEffect(() => {
-    if (isDark) {
-      document.documentElement.classList.add('dark');
-      localStorage.theme = 'dark';
-    } else {
-      document.documentElement.classList.remove('dark');
-      localStorage.theme = 'light';
-    }
-  }, [isDark]);
+  const settings = useDashboardStore(s => s.settings);
 
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { id: 'strategy', label: 'Strategy', icon: Target },
+    ...(settings?.showStrategy ? [{ id: 'strategy', label: 'Strategy', icon: Target }] : []),
     { id: 'users', label: 'Users', icon: Users },
     { id: 'pricing', label: 'Pricing', icon: CreditCard },
     { id: 'integrations', label: 'Integrations', icon: Blocks },
@@ -122,18 +106,6 @@ const Sidebar = () => {
                 <span className="text-sm font-medium text-white">John Smith</span>
                 <span className="text-xs text-gray-400">Pro Plan</span>
               </div>
-            </div>
-            <div className="flex items-center gap-1">
-              <button 
-                onClick={() => setIsDark(!isDark)}
-                className="text-gray-400 hover:text-white p-1.5 rounded-md hover:bg-white/10 transition-colors"
-                title="Toggle Theme"
-              >
-                {isDark ? <Sun size={18} /> : <Moon size={18} />}
-              </button>
-              <button className="text-gray-400 hover:text-white p-1.5 rounded-md hover:bg-white/10 transition-colors">
-                <Settings size={18} />
-              </button>
             </div>
           </div>
         ) : (

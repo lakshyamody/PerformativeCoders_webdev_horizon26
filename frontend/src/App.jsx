@@ -28,7 +28,9 @@ function App() {
     toggleVoicePanel,
     strategy,
     metricsHistory,
-    metrics
+    metrics,
+    settings,
+    voiceAssistantEnabled
   } = useDashboardStore();
 
 
@@ -44,7 +46,7 @@ function App() {
   return (
     <div className="flex h-screen overflow-hidden bg-background text-text-primary">
       {/* War Room Overlay */}
-      <WarRoom active={warRoomActive} />
+      <WarRoom active={warRoomActive && settings.showAnimations} />
 
       <Sidebar />
 
@@ -73,7 +75,7 @@ function App() {
       </div>
 
       {/* Voice Assistant Overlay */}
-      <VoiceDrawer />
+      {voiceAssistantEnabled && <VoiceDrawer />}
 
     </div>
   );
