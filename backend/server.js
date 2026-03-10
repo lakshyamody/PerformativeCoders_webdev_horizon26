@@ -57,6 +57,20 @@ function getNestedValue(obj, path) {
     return path.split('.').reduce((acc, part) => acc && acc[part], obj);
 }
 
+let sourceValues = {
+    sales: {},
+    inventory: {},
+    support: {},
+    cashflow: {}
+};
+
+function averageValues(obj, fallback) {
+    const vals = Object.values(obj);
+    if (!vals || vals.length === 0) return fallback;
+    const sum = vals.reduce((a, b) => a + b, 0);
+    return sum / vals.length;
+}
+
 function processWebhookPayload(source, payload) {
     let sourceName = source;
     // For demo CRMs and ERPs
@@ -64,23 +78,26 @@ function processWebhookPayload(source, payload) {
         sourceName = 'HubSpot';
         if (payload.deals) {
             const total = payload.deals.filter(d => d.dealstage === 'closedwon').reduce((sum, d) => sum + d.amount, 0);
-            currentState.metrics.sales.revenue = total;
-            currentState.metrics.sales.source = 'HubSpot';
+            sourceValues.sales['HubSpot'] = total;
+            currentState.metrics.sales.revenue = averageValues(sourceValues.sales, currentState.metrics.sales.revenue);
+            currentState.metrics.sales.source = Object.keys(sourceValues.sales).join(' & ');
         }
     } else if (source === 'salesforce') {
         sourceName = 'Salesforce';
         if (payload.sobject && payload.sobject.Opportunity) {
             const opps = Array.isArray(payload.sobject.Opportunity) ? payload.sobject.Opportunity : [payload.sobject.Opportunity];
             const total = opps.filter(o => o.StageName === 'Closed Won').reduce((sum, o) => sum + o.Amount, 0);
-            currentState.metrics.sales.revenue = total;
-            currentState.metrics.sales.source = 'Salesforce';
+            sourceValues.sales['Salesforce'] = total;
+            currentState.metrics.sales.revenue = averageValues(sourceValues.sales, currentState.metrics.sales.revenue);
+            currentState.metrics.sales.source = Object.keys(sourceValues.sales).join(' & ');
         }
     } else if (source === 'sap') {
         sourceName = 'SAP';
         if (payload.materialDocument && payload.materialDocument.items) {
             const totalQty = payload.materialDocument.items.reduce((sum, item) => sum + item.quantity, 0);
-            currentState.metrics.inventory.totalUnits = totalQty;
-            currentState.metrics.inventory.source = 'SAP';
+            sourceValues.inventory['SAP'] = totalQty;
+            currentState.metrics.inventory.totalUnits = averageValues(sourceValues.inventory, currentState.metrics.inventory.totalUnits);
+            currentState.metrics.inventory.source = Object.keys(sourceValues.inventory).join(' & ');
         }
     } else if (source === 'quickbooks') {
         sourceName = 'QuickBooks';
@@ -94,8 +111,9 @@ function processWebhookPayload(source, payload) {
                     });
                 }
             });
-            currentState.metrics.cashflow.available = total;
-            currentState.metrics.cashflow.source = 'QuickBooks';
+            sourceValues.cashflow['QuickBooks'] = total;
+            currentState.metrics.cashflow.available = averageValues(sourceValues.cashflow, currentState.metrics.cashflow.available);
+            currentState.metrics.cashflow.source = Object.keys(sourceValues.cashflow).join(' & ');
         }
     } else {
         // Custom Webhook
@@ -105,17 +123,21 @@ function processWebhookPayload(source, payload) {
             const val = getNestedValue(payload, webhook.fieldPath);
             if (val !== undefined) {
                 if (webhook.targetMetric === 'Sales Revenue') {
-                    currentState.metrics.sales.revenue = Number(val);
-                    currentState.metrics.sales.source = webhook.name;
+                    sourceValues.sales[webhook.name] = Number(val);
+                    currentState.metrics.sales.revenue = averageValues(sourceValues.sales, currentState.metrics.sales.revenue);
+                    currentState.metrics.sales.source = Object.keys(sourceValues.sales).join(' & ');
                 } else if (webhook.targetMetric === 'Inventory Level') {
-                    currentState.metrics.inventory.totalUnits = Number(val);
-                    currentState.metrics.inventory.source = webhook.name;
+                    sourceValues.inventory[webhook.name] = Number(val);
+                    currentState.metrics.inventory.totalUnits = averageValues(sourceValues.inventory, currentState.metrics.inventory.totalUnits);
+                    currentState.metrics.inventory.source = Object.keys(sourceValues.inventory).join(' & ');
                 } else if (webhook.targetMetric === 'Support Tickets') {
-                    currentState.metrics.support.openTickets = Number(val);
-                    currentState.metrics.support.source = webhook.name;
+                    sourceValues.support[webhook.name] = Number(val);
+                    currentState.metrics.support.openTickets = averageValues(sourceValues.support, currentState.metrics.support.openTickets);
+                    currentState.metrics.support.source = Object.keys(sourceValues.support).join(' & ');
                 } else if (webhook.targetMetric === 'Cash Flow') {
-                    currentState.metrics.cashflow.available = Number(val);
-                    currentState.metrics.cashflow.source = webhook.name;
+                    sourceValues.cashflow[webhook.name] = Number(val);
+                    currentState.metrics.cashflow.available = averageValues(sourceValues.cashflow, currentState.metrics.cashflow.available);
+                    currentState.metrics.cashflow.source = Object.keys(sourceValues.cashflow).join(' & ');
                 }
             }
         }
@@ -170,9 +192,21 @@ function toggleSimulator(source, active) {
         if (internalSimulators[source]) {
             clearInterval(internalSimulators[source]);
             delete internalSimulators[source];
-            if (source === 'hubspot' || source === 'salesforce') delete currentState.metrics.sales.source;
-            if (source === 'sap') delete currentState.metrics.inventory.source;
-            if (source === 'quickbooks') delete currentState.metrics.cashflow.source;
+            
+            // Cleanup sourceValues
+            const sourceName = source === 'hubspot' ? 'HubSpot' : source === 'salesforce' ? 'Salesforce' : source === 'sap' ? 'SAP' : source === 'quickbooks' ? 'QuickBooks' : source;
+            if (source === 'hubspot' || source === 'salesforce') {
+                delete sourceValues.sales[sourceName];
+                currentState.metrics.sales.source = Object.keys(sourceValues.sales).length ? Object.keys(sourceValues.sales).join(' & ') : undefined;
+            }
+            if (source === 'sap') {
+                delete sourceValues.inventory[sourceName];
+                currentState.metrics.inventory.source = Object.keys(sourceValues.inventory).length ? Object.keys(sourceValues.inventory).join(' & ') : undefined;
+            }
+            if (source === 'quickbooks') {
+                delete sourceValues.cashflow[sourceName];
+                currentState.metrics.cashflow.source = Object.keys(sourceValues.cashflow).length ? Object.keys(sourceValues.cashflow).join(' & ') : undefined;
+            }
         }
     }
 }
@@ -427,6 +461,38 @@ app.post('/api/webhooks/ingest/:source', (req, res) => {
     // Send immediate dashboard update on push
     io.emit('dashboard:update', currentState);
     res.json({ success: true, message: 'Payload integrated' });
+});
+
+app.post('/api/webhooks/test/:connectorId', (req, res) => {
+    const { connectorId } = req.params;
+    let payload = {};
+    let metricType = '';
+    let extractedValue = '';
+
+    if (connectorId === 'hubspot') {
+        payload = { deals: [{ dealname: 'Test Deal', amount: 24500, dealstage: 'closedwon', closedate: new Date() }] };
+        metricType = 'Sales Revenue';
+        extractedValue = '$24,500 from 1 closed deal';
+    } else if (connectorId === 'salesforce') {
+        payload = { sobject: { Opportunity: [{ Amount: 32000, StageName: 'Closed Won' }] } };
+        metricType = 'Sales Revenue';
+        extractedValue = '$32,000 from Opportunity';
+    } else if (connectorId === 'sap') {
+        payload = { materialDocument: { items: [{ material: 'TEST-SKU', quantity: 847 }] } };
+        metricType = 'Inventory Level';
+        extractedValue = '847 units across 1 SKU';
+    } else if (connectorId === 'quickbooks') {
+         payload = { eventNotifications: [{ dataChangeEvent: { entities: [{ name: 'Invoice', amount: 15000 }] } }] };
+         metricType = 'Cash Flow';
+         extractedValue = '$15,000 via Invoice';
+    } else {
+        return res.status(404).json({ error: 'Unknown connector' });
+    }
+
+    processWebhookPayload(connectorId, payload);
+    io.emit('dashboard:update', currentState);
+
+    res.json({ success: true, metric: metricType, message: `${metricType} updated → ${extractedValue}` });
 });
 
 app.post('/api/webhooks/simulate/:source', (req, res) => {

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { PieChart, Cloud, Package, DollarSign, ArrowRight, Check, Loader2, Plus, MonitorPlay, Activity } from 'lucide-react';
+import { PieChart, Cloud, Package, DollarSign, ArrowRight, Check, Loader2, Plus, MonitorPlay, Activity, Eye, EyeOff, Copy, X } from 'lucide-react';
 import useDashboardStore from '../store/dashboardStore';
 
 const steps = [
@@ -196,7 +196,14 @@ function StepConnectIntegrations() {
   const navigate = useNavigate();
   const { connectedIntegrations, setConnectedIntegrations, setOnboardingComplete } = useDashboardStore();
   const [simulators, setSimulators] = useState({});
-  const [loading, setLoading] = useState({});
+  
+  const [selectedConnector, setSelectedConnector] = useState(null);
+  const [modalStep, setModalStep] = useState(1);
+  const [webhookInfo, setWebhookInfo] = useState(null);
+  const [testRunning, setTestRunning] = useState(false);
+  const [testResult, setTestResult] = useState(null);
+  const [testMessage, setTestMessage] = useState('');
+  const [showSecret, setShowSecret] = useState(false);
 
   useEffect(() => {
     fetchSimulators();
@@ -211,101 +218,317 @@ function StepConnectIntegrations() {
         const activeIds = Object.keys(data).filter(k => data[k]);
         setConnectedIntegrations(activeIds);
       }
-    } catch (e) {
-      console.error(e);
-    }
-  };
-
-  const toggleConnection = async (id) => {
-    setLoading(prev => ({ ...prev, [id]: true }));
-    const isConnected = simulators[id];
-    try {
-      await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:4000'}/api/webhooks/simulate/${id}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ active: !isConnected })
-      });
-      await fetchSimulators();
-    } catch (e) {
-      console.error(e);
-    }
-    setLoading(prev => ({ ...prev, [id]: false }));
+    } catch (e) { console.error(e) }
   };
 
   const connectors = [
-    { id: 'hubspot', name: 'HubSpot', icon: PieChart },
-    { id: 'salesforce', name: 'Salesforce', icon: Cloud },
-    { id: 'sap', name: 'SAP ERP', icon: Package },
-    { id: 'quickbooks', name: 'QuickBooks', icon: DollarSign }
+    { 
+      id: 'hubspot', name: 'HubSpot', icon: PieChart,
+      setupText: "Paste this URL into HubSpot → Settings → Integrations → Webhooks → Subscription URL",
+      payloadTemplate: `{\n  "deals": [\n    {\n      "dealname": "New Deal",\n      "amount": 25000,\n      "dealstage": "closedwon"\n    }\n  ]\n}`
+    },
+    { 
+      id: 'salesforce', name: 'Salesforce', icon: Cloud,
+      setupText: "Add this to Salesforce → Setup → Outbound Messages",
+      payloadTemplate: `{\n  "sobject": {\n    "Opportunity": [\n      { "Amount": 50000, "StageName": "Closed Won" }\n    ]\n  }\n}`
+    },
+    { 
+      id: 'sap', name: 'SAP ERP', icon: Package,
+      setupText: "Configure in SAP → Integration Suite → HTTP Receiver Channel",
+      payloadTemplate: `{\n  "materialDocument": {\n    "items": [\n      { "material": "SKU-99", "quantity": 1200 }\n    ]\n  }\n}`
+    },
+    { 
+      id: 'quickbooks', name: 'QuickBooks', icon: DollarSign,
+      setupText: "Enter in QuickBooks → Settings → Webhooks → Endpoint URL",
+      payloadTemplate: `{\n  "eventNotifications": [\n    {\n      "dataChangeEvent": {\n        "entities": [\n          { "name": "Invoice", "amount": 10000 }\n        ]\n      }\n    }\n  ]\n}`
+    }
   ];
 
-  const hasConnection = Object.values(simulators).some(Boolean);
-
-  const handleContinue = () => {
-    if (hasConnection) {
-      navigate('/onboarding/configure');
+  const handleCardClick = async (c) => {
+    setSelectedConnector(c);
+    if (simulators[c.id]) {
+      setModalStep(3);
+      setTestResult('success');
+      setTestMessage('Connection is active and data is flowing.');
+    } else {
+      setModalStep(1);
+      setWebhookInfo(null);
+      setTestResult(null);
+      setTestMessage('');
+      try {
+        const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:4000'}/api/webhooks/register`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name: c.id, targetMetric: 'demo', fieldPath: 'demo' })
+        });
+        if (res.ok) setWebhookInfo(await res.json());
+      } catch (err) { console.error(err) }
     }
   };
 
-  const handleDemoMode = async () => {
-    // Proceed purely with demo data mode
-    await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:4000'}/api/settings/complete`, { method: 'POST' });
-    setOnboardingComplete(true);
-    navigate('/');
+  const runTest = async (id) => {
+    setTestRunning(true);
+    setTestResult(null);
+    await new Promise(r => setTimeout(r, 1500));
+    try {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:4000'}/api/webhooks/test/${id}`, { method: 'POST' });
+      const data = await res.json();
+      if (res.ok) {
+        setTestResult('success');
+        setTestMessage(data.message);
+      } else {
+        setTestResult('error');
+        setTestMessage('Signature mismatch or missing fields mapped.');
+      }
+    } catch (e) {
+      setTestResult('error');
+      setTestMessage('Network error occurred during test.');
+    }
+    setTestRunning(false);
   };
+
+  const finishConnection = async (id) => {
+    if (!simulators[id]) {
+      await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:4000'}/api/webhooks/simulate/${id}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ active: true })
+      });
+      await fetchSimulators();
+    }
+    setSelectedConnector(null);
+  };
+
+  const disconnect = async (id) => {
+    if (simulators[id]) {
+      await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:4000'}/api/webhooks/simulate/${id}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ active: false })
+      });
+      await fetchSimulators();
+    }
+    setSelectedConnector(null);
+  };
+
+  const hasConnection = Object.values(simulators).some(Boolean);
 
   return (
     <PageTransition>
-      <div className="w-full max-w-2xl bg-[#1a2236]/80 backdrop-blur-md border border-white/10 p-8 rounded-2xl shadow-2xl">
+      <div className="w-full max-w-2xl bg-[#1a2236]/80 backdrop-blur-md border border-white/10 p-8 rounded-2xl shadow-2xl relative">
         <div className="mb-8">
           <p className="text-xs font-bold text-indigo-400 mb-2 uppercase tracking-wider">Step 2 of 3</p>
           <h2 className="text-2xl font-bold text-white mb-2">What tools do you use?</h2>
-          <p className="text-sm text-gray-400">OpsPulse feeds natively from your existing data exhaust. Connect at least one source to activate your command center.</p>
+          <p className="text-sm text-gray-400">Connect at least one source to activate your command center.</p>
         </div>
 
         <div className="grid grid-cols-2 gap-4 mb-10">
           {connectors.map(c => {
             const isConnected = simulators[c.id];
-            const isLoad = loading[c.id];
             return (
-              <button
+              <motion.button
                 key={c.id}
-                onClick={() => toggleConnection(c.id)}
-                disabled={isLoad}
-                className={`relative overflow-hidden flex flex-col items-center justify-center p-6 rounded-xl border transition-all duration-300 group ${isConnected ? 'bg-indigo-500/10 border-indigo-500/50 text-white' : 'bg-black/20 border-white/10 text-gray-400 hover:border-white/30 hover:bg-black/40'}`}
+                layoutId={`card-${c.id}`}
+                onClick={() => handleCardClick(c)}
+                className={`relative overflow-hidden flex flex-col items-center justify-center p-6 rounded-xl border transition-all duration-300 group ${isConnected ? 'bg-emerald-500/10 border-emerald-500/50 text-white shadow-[0_0_15px_rgba(16,185,129,0.15)]' : 'bg-black/20 border-white/10 text-gray-400 hover:border-indigo-400/50 hover:bg-black/40'}`}
               >
                 {isConnected && (
-                  <div className="absolute top-3 right-3 text-emerald-400 bg-emerald-400/10 p-1 rounded-full"><Check size={14} strokeWidth={3} /></div>
+                  <div className="absolute top-3 right-3 text-emerald-400 bg-emerald-400/10 p-1 rounded-full">
+                    <Check size={14} strokeWidth={3} />
+                  </div>
                 )}
-                {isLoad ? (
-                  <Loader2 className="animate-spin text-indigo-400 mb-3" size={32} />
-                ) : (
-                  <c.icon size={32} strokeWidth={1.5} className={`mb-3 transition-transform duration-300 ${isConnected ? 'text-indigo-400 scale-110' : 'group-hover:scale-110'}`} />
-                )}
+                <c.icon size={32} strokeWidth={1.5} className={`mb-3 transition-transform duration-300 ${isConnected ? 'text-emerald-400 scale-110' : 'group-hover:scale-110 group-hover:text-indigo-400'}`} />
                 <span className="font-semibold">{c.name}</span>
-                <span className="text-xs opacity-60 mt-1">{isConnected ? 'Connected' : 'Click to connect'}</span>
-              </button>
+                <span className="text-xs opacity-60 mt-1">{isConnected ? 'Connected ✓' : 'Click to connect'}</span>
+              </motion.button>
             )
           })}
         </div>
         
         <div className="flex flex-col items-end gap-3 border-t border-white/10 pt-6">
           <button 
-            onClick={handleContinue}
+            onClick={() => hasConnection && navigate('/onboarding/configure')}
             disabled={!hasConnection}
             className={`px-8 py-3 rounded-xl font-bold transition-all relative ${hasConnection ? 'bg-indigo-500 text-white hover:bg-indigo-600 shadow-lg shadow-indigo-500/25' : 'bg-white/5 text-gray-600 cursor-not-allowed'}`}
           >
             Continue to Configuration
-            {!hasConnection && (
-              <span className="absolute -top-8 right-0 text-xs text-amber-500/80 whitespace-nowrap opacity-0 transition-opacity">Connect a data source first</span>
-            )}
           </button>
-          
-          <button onClick={handleDemoMode} className="text-xs text-gray-500 hover:text-gray-300 transition-colors">
+          <button onClick={async () => {
+            await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:4000'}/api/settings/complete`, { method: 'POST' });
+            setOnboardingComplete(true);
+            navigate('/');
+          }} className="text-xs text-gray-500 hover:text-gray-300 transition-colors">
             Skip setup & continue with simulated Demo Data
           </button>
         </div>
       </div>
+
+      {/* Modal Overlay */}
+      <AnimatePresence>
+        {selectedConnector && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+          >
+            <motion.div 
+              layoutId={`card-${selectedConnector.id}`}
+              className="bg-[#1a2236] border border-white/10 rounded-2xl w-full max-w-xl overflow-hidden shadow-2xl flex flex-col"
+            >
+              <div className="flex items-center justify-between p-5 border-b border-white/5 bg-black/20">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-indigo-500/10 rounded-lg">
+                    <selectedConnector.icon size={24} className="text-indigo-400" />
+                  </div>
+                  <h3 className="text-lg font-bold text-white">Connect {selectedConnector.name}</h3>
+                </div>
+                <button onClick={() => setSelectedConnector(null)} className="text-gray-500 hover:text-white p-1">
+                  <X size={20} />
+                </button>
+              </div>
+              
+              <div className="p-6">
+                {!simulators[selectedConnector.id] && (
+                  <div className="flex items-center gap-2 mb-6">
+                    {[1, 2, 3].map(step => (
+                      <div key={step} className={`h-1.5 flex-1 rounded-full ${modalStep >= step ? 'bg-indigo-500' : 'bg-white/10'}`}></div>
+                    ))}
+                  </div>
+                )}
+
+                {/* STEP 1: CREDENTIALS */}
+                {modalStep === 1 && !simulators[selectedConnector.id] && (
+                  <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-4">
+                    <div className="mb-6 bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 px-4 py-3 rounded-xl text-sm font-medium">
+                      {selectedConnector.setupText}
+                    </div>
+                    {webhookInfo ? (
+                      <>
+                        <div>
+                          <label className="text-xs font-medium text-gray-400 block mb-1">Your Webhook URL</label>
+                          <div className="flex items-center gap-2">
+                            <input readOnly value={webhookInfo.url} className="flex-1 bg-black/40 border border-white/10 rounded-lg px-4 py-2.5 text-sm text-gray-300 outline-none" />
+                            <button onClick={() => navigator.clipboard.writeText(webhookInfo.url)} className="p-2.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-gray-400 hover:text-white transition-colors"><Copy size={16}/></button>
+                          </div>
+                        </div>
+                        <div>
+                          <label className="text-xs font-medium text-gray-400 block mb-1">Secret Token</label>
+                          <div className="flex items-center gap-2">
+                            <input readOnly type={showSecret ? "text" : "password"} value={webhookInfo.secret} className="flex-1 bg-black/40 border border-white/10 rounded-lg px-4 py-2.5 text-sm text-gray-300 outline-none font-mono" />
+                            <button onClick={() => setShowSecret(!showSecret)} className="p-2.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-gray-400 hover:text-white transition-colors">
+                              {showSecret ? <EyeOff size={16}/> : <Eye size={16}/>}
+                            </button>
+                          </div>
+                        </div>
+                      </>
+                    ) : (
+                      <div className="flex justify-center py-8"><Loader2 className="animate-spin text-indigo-500" size={30} /></div>
+                    )}
+                    <button onClick={() => setModalStep(2)} className="w-full mt-6 py-3 bg-white/10 hover:bg-white/15 text-white font-bold rounded-xl transition-colors">
+                      Next: I've added the webhook
+                    </button>
+                  </motion.div>
+                )}
+
+                {/* STEP 2: CONFIGURE */}
+                {modalStep === 2 && !simulators[selectedConnector.id] && (
+                  <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}>
+                    <h4 className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
+                      <Activity size={16} className="text-indigo-400" /> Received Payload Preview
+                    </h4>
+                    <div className="bg-black/80 rounded-xl border border-white/10 p-4 mb-5 overflow-auto max-h-48">
+                      <pre className="text-xs text-emerald-400 font-mono">
+                        {selectedConnector.payloadTemplate}
+                      </pre>
+                    </div>
+                    
+                    <label className="flex items-center justify-between p-4 bg-white/5 rounded-xl border border-white/5 cursor-pointer">
+                      <div>
+                        <p className="font-semibold text-white text-sm">Auto-map fields to OpsPulse</p>
+                        <p className="text-xs text-gray-400">We'll automatically extract values using our standard schema mapping.</p>
+                      </div>
+                      <input type="checkbox" defaultChecked className="w-4 h-4 rounded border-gray-600 text-indigo-500 bg-black/30" />
+                    </label>
+
+                    <button onClick={() => setModalStep(3)} className="w-full mt-6 py-3 bg-white/10 hover:bg-white/15 text-white font-bold rounded-xl transition-colors">
+                      Next: Test the connection
+                    </button>
+                  </motion.div>
+                )}
+
+                {/* STEP 3: TEST & ALREADY CONNECTED */}
+                {modalStep === 3 && (
+                  <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="flex flex-col items-center py-6">
+                    
+                    {!testResult && !testRunning && !simulators[selectedConnector.id] && (
+                      <button onClick={() => runTest(selectedConnector.id)} className="px-8 py-4 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-bold shadow-[0_0_30px_rgba(99,102,241,0.3)] hover:shadow-[0_0_50px_rgba(99,102,241,0.5)] transition-all mb-4 text-lg">
+                        Send Test Payload
+                      </button>
+                    )}
+
+                    {testRunning && (
+                      <div className="flex flex-col items-center gap-4 text-indigo-400 mb-6">
+                        <div className="relative">
+                          <Loader2 size={40} className="animate-spin relative z-10" />
+                          <div className="absolute inset-0 bg-indigo-500 blur-xl opacity-50 rounded-full animate-pulse"></div>
+                        </div>
+                        <span className="font-medium animate-pulse">Sending test payload across network...</span>
+                      </div>
+                    )}
+
+                    {testResult === 'success' && (
+                      <div className="flex flex-col items-center text-center mb-8">
+                        <div className="w-16 h-16 bg-emerald-500/20 text-emerald-400 rounded-full flex items-center justify-center mb-4">
+                          <Check size={32} strokeWidth={3} />
+                        </div>
+                        <h4 className="text-xl font-bold text-white mb-2">Payload received and validated</h4>
+                        <div className="bg-black/30 px-4 py-2 rounded-lg border border-white/5 text-emerald-300 text-sm font-medium inline-block">
+                          {testMessage}
+                        </div>
+                      </div>
+                    )}
+
+                    {testResult === 'error' && (
+                      <div className="flex flex-col items-center text-center mb-6">
+                         <div className="w-16 h-16 bg-red-500/20 text-red-400 rounded-full flex items-center justify-center mb-4 border border-red-500/30">
+                          <X size={32} strokeWidth={3} />
+                        </div>
+                        <h4 className="text-lg font-bold text-white mb-2">Test Failed</h4>
+                        <p className="text-sm text-red-400">{testMessage}</p>
+                        <button onClick={() => runTest(selectedConnector.id)} className="mt-4 px-4 py-2 border border-white/20 text-white rounded-lg hover:bg-white/5">
+                          Retry Test
+                        </button>
+                      </div>
+                    )}
+
+                    <div className="w-full flex flex-col gap-3">
+                      {testResult === 'success' && !simulators[selectedConnector.id] && (
+                        <button onClick={() => finishConnection(selectedConnector.id)} className="w-full py-3 bg-emerald-500 hover:bg-emerald-400 text-black font-bold rounded-xl transition-colors shadow-[0_0_20px_rgba(16,185,129,0.2)]">
+                          Finish Connection
+                        </button>
+                      )}
+
+                      {simulators[selectedConnector.id] && (
+                         <>
+                          {testResult !== 'success' && (
+                             <button onClick={() => runTest(selectedConnector.id)} className="w-full py-3 border border-white/20 text-white hover:bg-white/5 font-semibold rounded-xl transition-colors">
+                              Send Another Test
+                            </button>
+                          )}
+                          <button onClick={() => disconnect(selectedConnector.id)} className="w-full py-3 bg-red-500/10 text-red-400 hover:bg-red-500/20 font-bold rounded-xl transition-colors">
+                            Disconnect Integration
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  </motion.div>
+                )}
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </PageTransition>
   );
 }
