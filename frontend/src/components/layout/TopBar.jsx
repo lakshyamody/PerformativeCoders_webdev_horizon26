@@ -10,7 +10,8 @@ const TopBar = () => {
     voicePanelOpen, toggleVoicePanel, connected, 
     simulationMode, warRoomActive, setSimulationMode, setWarRoomActive,
     updateDashboard,
-    voiceAssistantEnabled
+    voiceAssistantEnabled,
+    setReportModalOpen
   } = useDashboardStore();
 
   const [simLoading, setSimLoading] = React.useState(false);
@@ -115,7 +116,10 @@ const TopBar = () => {
           <span>Export data</span>
         </button>
         
-        <button className="hidden sm:flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-white bg-[#6366f1] hover:bg-indigo-600 rounded-lg transition-colors shadow-sm shadow-indigo-500/20">
+        <button 
+          onClick={() => setReportModalOpen(true)}
+          className="hidden sm:flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-white bg-[#6366f1] hover:bg-indigo-600 rounded-lg transition-colors shadow-sm shadow-indigo-500/20"
+        >
           <Plus size={16} />
           <span>Create report</span>
         </button>

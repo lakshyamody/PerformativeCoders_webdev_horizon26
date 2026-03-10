@@ -50,6 +50,9 @@ const useDashboardStore = create((set, get) => ({
     voiceAssistantEnabled: true,
     setVoiceAssistantEnabled: (enabled) => set({ voiceAssistantEnabled: enabled }),
 
+    reportModalOpen: false,
+    setReportModalOpen: (open) => set({ reportModalOpen: open }),
+
     activeTab: 'dashboard',
     setActiveTab: (tab) => set({ activeTab: tab }),
 

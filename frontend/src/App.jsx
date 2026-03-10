@@ -7,6 +7,7 @@ import VoiceDrawer from './components/assistant/VoiceDrawer';
 import WarRoom from './components/WarRoom/WarRoom';
 import Sidebar from './components/layout/Sidebar';
 import TopBar from './components/layout/TopBar';
+import ReportModal from './components/layout/ReportModal';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import Users from './pages/Users';
 import Pricing from './pages/Pricing';
@@ -76,6 +77,9 @@ function App() {
 
       {/* Voice Assistant Overlay */}
       {voiceAssistantEnabled && <VoiceDrawer />}
+
+      {/* Report Modal */}
+      <ReportModal />
 
     </div>
   );
