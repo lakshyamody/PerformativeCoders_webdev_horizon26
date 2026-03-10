@@ -126,13 +126,24 @@ function updateDashboard() {
     io.emit('dashboard:update', currentState);
 }
 
-// Update every 3 seconds
-setInterval(updateDashboard, 3000);
+let dashboardInterval;
+function startDashboardInterval(ms) {
+    if (dashboardInterval) clearInterval(dashboardInterval);
+    dashboardInterval = setInterval(updateDashboard, ms);
+}
+startDashboardInterval(3000);
 
 // Socket.io connections
 io.on('connection', (socket) => {
     console.log('Client connected:', socket.id);
     socket.emit('dashboard:update', currentState);
+
+    socket.on('setUpdateFreq', (seconds) => {
+        const ms = parseInt(seconds) * 1000;
+        if (ms >= 1000 && ms <= 60000) {
+            startDashboardInterval(ms);
+        }
+    });
 
     socket.on('disconnect', () => {
         console.log('Client disconnected:', socket.id);

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import useDashboardStore from '../../store/dashboardStore';
 import { apiClient } from '../../api/apiClient';
+import { formatCurrency } from '../../utils/currency';
 import MetricCard from './MetricCard';
 import RevenueChart from './RevenueChart';
 import ProfitPanel from './ProfitPanel';
@@ -63,7 +64,7 @@ export default function Dashboard() {
                 />
                 <MetricCard 
                     title="Total Revenue" 
-                    value={`$${Math.round(sales).toLocaleString()}`} 
+                    value={formatCurrency(sales, settings.currency)} 
                     icon={CircleDollarSign} 
                     badgeValue="+8.2%"
                     badgeType="positive"
@@ -119,8 +120,9 @@ export default function Dashboard() {
                         loading={loadingHistory}
                         selectedTimeRange={selectedTimeRange}
                         setSelectedTimeRange={setSelectedTimeRange} 
+                        currency={settings.currency}
                     />
-                    <ProfitPanel history={displayHistory} bss={bss} />
+                    <ProfitPanel history={displayHistory} bss={bss} currency={settings.currency} />
                 </div>
             </div>
 

@@ -2,8 +2,9 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Loader2, Calendar } from 'lucide-react';
+import { formatCurrency } from '../../utils/currency';
 
-export default function RevenueChart({ history, loading, selectedTimeRange = 'live', setSelectedTimeRange }) {
+export default function RevenueChart({ history, loading, selectedTimeRange = 'live', setSelectedTimeRange, currency }) {
 
     // Format data for chart
     const data = history.map(h => ({
@@ -31,7 +32,7 @@ export default function RevenueChart({ history, loading, selectedTimeRange = 'li
                     <p className="text-gray-400 text-xs mb-2">{formatTime(label)}</p>
                     {payload.map((entry, index) => (
                         <p key={index} className="text-sm font-semibold" style={{ color: entry.color }}>
-                            {entry.name}: ${Math.round(entry.value).toLocaleString()}
+                            {entry.name}: {formatCurrency(entry.value, currency)}
                         </p>
                     ))}
                 </div>
@@ -108,7 +109,7 @@ export default function RevenueChart({ history, loading, selectedTimeRange = 'li
                                 fontSize={11} 
                                 tickLine={false} 
                                 axisLine={false}
-                                tickFormatter={(value) => `$${value >= 1000 ? (value / 1000).toFixed(1) + 'k' : value}`} 
+                                tickFormatter={(value) => formatCurrency(value, currency, true)} 
                             />
                             <Tooltip content={<CustomTooltip />} />
                             <Area 

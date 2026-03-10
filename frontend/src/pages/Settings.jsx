@@ -1,14 +1,17 @@
 import React, { useState } from 'react';
 import { Settings2, Bell, Shield, SlidersHorizontal, Save, Check } from 'lucide-react';
+import useDashboardStore from '../store/dashboardStore';
 
 export default function Settings() {
   const [activeTab, setActiveTab] = useState('general');
   const [saved, setSaved] = useState(false);
 
+  const { settings, updateSettings } = useDashboardStore();
+
   const [formState, setFormState] = useState({
-    businessName: 'Acme Corp',
-    timezone: 'UTC',
-    currency: 'USD',
+    businessName: settings.businessName || 'Acme Corp',
+    timezone: settings.timezone || 'UTC',
+    currency: settings.currency || 'INR',
     emailAlerts: true,
     browserPush: false,
     digestFreq: 'daily',
@@ -28,7 +31,8 @@ export default function Settings() {
   const handleSave = (e) => {
     e.preventDefault();
     setSaved(true);
-    // In a real app, send to /api/settings
+    // Update global store settings so the whole app reflects currency, etc.
+    updateSettings(formState);
     setTimeout(() => setSaved(false), 3000);
   };
 
@@ -112,6 +116,8 @@ export default function Settings() {
                     <option value="USD">USD ($)</option>
                     <option value="EUR">EUR (€)</option>
                     <option value="GBP">GBP (£)</option>
+                    <option value="INR">INR (₹)</option>
+                    <option value="JPY">JPY (¥)</option>
                   </select>
                 </div>
               </div>

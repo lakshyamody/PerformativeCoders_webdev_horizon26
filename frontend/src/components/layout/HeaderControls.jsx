@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Moon, Sun, Settings, Check, Monitor, Volume2, CloudOff, CloudLightning, RefreshCw } from 'lucide-react';
+import { Moon, Sun, Settings, Check, Monitor, Volume2, CloudOff, CloudLightning, RefreshCw, Banknote } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import useDashboardStore from '../../store/dashboardStore';
 
@@ -105,6 +105,33 @@ export default function HeaderControls() {
                                         <div className={`absolute top-0.5 left-0.5 w-3 h-3 bg-white rounded-full transition-transform ${settings.showAnimations ? 'translate-x-4' : ''}`}></div>
                                     </div>
                                 </label>
+                                <label className="flex items-center justify-between cursor-pointer group">
+                                    <span className="text-sm text-gray-300 group-hover:text-white transition-colors">Compact Cards</span>
+                                    <div className={`w-8 h-4 rounded-full transition-colors relative ${settings.compactCards ? 'bg-[#6366f1]' : 'bg-white/10'}`} onClick={() => updateSettings({ compactCards: !settings.compactCards })}>
+                                        <div className={`absolute top-0.5 left-0.5 w-3 h-3 bg-white rounded-full transition-transform ${settings.compactCards ? 'translate-x-4' : ''}`}></div>
+                                    </div>
+                                </label>
+                            </div>
+
+                            {/* Regional Settings */}
+                            <div className="space-y-3">
+                                <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-2">
+                                    <Banknote size={14} /> Regional Settings
+                                </h4>
+                                <div className="flex items-center justify-between">
+                                    <span className="text-sm text-gray-300">Currency</span>
+                                    <select 
+                                        className="bg-black/30 border border-white/10 rounded-lg py-1 px-2 text-white text-xs focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                                        value={settings.currency || 'USD'}
+                                        onChange={(e) => updateSettings({ currency: e.target.value })}
+                                    >
+                                        <option value="USD">USD ($)</option>
+                                        <option value="EUR">EUR (€)</option>
+                                        <option value="GBP">GBP (£)</option>
+                                        <option value="INR">INR (₹)</option>
+                                        <option value="JPY">JPY (¥)</option>
+                                    </select>
+                                </div>
                             </div>
 
                             {/* Update Frequency */}

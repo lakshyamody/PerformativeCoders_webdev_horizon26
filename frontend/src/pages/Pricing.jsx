@@ -1,14 +1,17 @@
 import React, { useState } from 'react';
 import { Check, Info } from 'lucide-react';
+import useDashboardStore from '../store/dashboardStore';
+import { formatCurrency } from '../utils/currency';
 
 export default function Pricing() {
   const [currentPlan, setCurrentPlan] = useState('Pro');
+  const currency = useDashboardStore(state => state.settings.currency);
 
   const plans = [
     {
       name: 'Free',
       description: 'Basic operations monitoring for small teams.',
-      price: '$0',
+      price: formatCurrency(0, currency),
       period: '/month',
       features: [
         'Up to 3 Integrations',
@@ -22,7 +25,7 @@ export default function Pricing() {
     {
       name: 'Pro',
       description: 'Advanced analytics and simulated crisis response.',
-      price: '$49',
+      price: formatCurrency(49, currency),
       period: '/user/month',
       features: [
         'Unlimited Integrations',
@@ -121,7 +124,7 @@ export default function Pricing() {
       <div className="mt-12 p-4 bg-indigo-500/10 border border-indigo-500/20 rounded-xl flex items-start gap-3 w-full max-w-3xl mx-auto text-indigo-200">
         <Info className="shrink-0 mt-0.5" size={18} />
         <p className="text-sm">
-          <strong>Billing Note:</strong> Prices shown are in USD. Annual subscriptions receive a 20% discount. For custom integrations or dedicated support, please select the Enterprise plan to speak with our technical sales team.
+          <strong>Billing Note:</strong> Prices shown are converted to {currency}. Annual subscriptions receive a 20% discount. For custom integrations or dedicated support, please select the Enterprise plan to speak with our technical sales team.
         </p>
       </div>
     </div>

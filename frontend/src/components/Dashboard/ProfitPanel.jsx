@@ -2,8 +2,9 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { BarChart, Bar, ResponsiveContainer, LineChart, Line, YAxis } from 'recharts';
 import { ArrowUpRight } from 'lucide-react';
+import { formatCurrency } from '../../utils/currency';
 
-export default function ProfitPanel({ history, bss }) {
+export default function ProfitPanel({ history, bss, currency }) {
     
     // Total Profit (mocked using revenue data)
     const profitData = history.slice(-15).map((h, i) => ({
@@ -33,7 +34,7 @@ export default function ProfitPanel({ history, bss }) {
                     <div>
                         <h3 className="text-gray-400 text-sm font-medium">Total Profit</h3>
                         <div className="flex items-baseline gap-2 mt-1">
-                            <span className="text-2xl font-bold text-white">${Math.round(currentProfit).toLocaleString()}</span>
+                            <span className="text-2xl font-bold text-white">{formatCurrency(currentProfit, currency)}</span>
                             <span className="text-xs font-semibold text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded-full">+12.5%</span>
                         </div>
                     </div>

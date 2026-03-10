@@ -43,7 +43,8 @@ const useDashboardStore = create((set, get) => ({
         showStrategy: true,
         showAnimations: true,
         compactCards: false,
-        updateFreq: 3
+        updateFreq: 3,
+        currency: 'INR'
     },
     updateSettings: (newSettings) => set((s) => ({ settings: { ...s.settings, ...newSettings } })),
 
