@@ -99,6 +99,12 @@ function updateDashboard() {
         : metricsGen.generateMetrics(currentState.metrics);
 
     const scores = scoringEngine.computeAllScores(metrics);
+    
+    // Patch the synthetic bss on the latest history entry
+    if (metricsGen.history && metricsGen.history.length > 0) {
+        metricsGen.history[metricsGen.history.length - 1].bss = scores.bss;
+    }
+
     let newAlerts = alertEngine.generateAlerts(metrics, scores, currentState.alerts);
     const ruleAlerts = evaluateCustomRules(metrics, scores);
     
@@ -139,7 +145,7 @@ app.get('/api/dashboard/state', (req, res) => {
 });
 
 app.get('/api/metrics/history', (req, res) => {
-    res.json(metricsGen.getHistory());
+    res.json(metricsGen.getHistory(req.query.range));
 });
 
 app.get('/api/alerts/active', (req, res) => {

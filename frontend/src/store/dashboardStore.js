@@ -76,6 +76,12 @@ const useDashboardStore = create((set, get) => ({
 
     // History for charts
     metricsHistory: [],
+    historicalMetrics: [],
+    setHistoricalMetrics: (history) => set({ historicalMetrics: history }),
+
+    selectedTimeRange: 'live',
+    setSelectedTimeRange: (range) => set({ selectedTimeRange: range }),
+
     addToHistory: (entry) => set((s) => ({
         metricsHistory: [...s.metricsHistory.slice(-60), entry]
     })),

@@ -1,21 +1,44 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import useDashboardStore from '../../store/dashboardStore';
+import { apiClient } from '../../api/apiClient';
 import MetricCard from './MetricCard';
 import RevenueChart from './RevenueChart';
 import ProfitPanel from './ProfitPanel';
 import RuleManager from './RuleManager';
 import AlertFeed from '../AlertFeed/AlertFeed';
-import { Activity, CircleDollarSign, Package, Ticket, X } from 'lucide-react';
+import { Activity, CircleDollarSign, Package, Ticket, X, Clock } from 'lucide-react';
 
 export default function Dashboard() {
     const metrics = useDashboardStore((s) => s.metrics);
     const scores = useDashboardStore((s) => s.scores);
     const alerts = useDashboardStore((s) => s.alerts);
-    const history = useDashboardStore((s) => s.metricsHistory);
+    const liveHistory = useDashboardStore((s) => s.metricsHistory);
+    const historicalMetrics = useDashboardStore((s) => s.historicalMetrics);
+    const setHistoricalMetrics = useDashboardStore((s) => s.setHistoricalMetrics);
+    const selectedTimeRange = useDashboardStore((s) => s.selectedTimeRange);
+    const setSelectedTimeRange = useDashboardStore((s) => s.setSelectedTimeRange);
     const settings = useDashboardStore((s) => s.settings);
 
     const [bssModalOpen, setBssModalOpen] = useState(false);
+    const [loadingHistory, setLoadingHistory] = useState(false);
+
+    useEffect(() => {
+        if (selectedTimeRange !== 'live') {
+            setLoadingHistory(true);
+            apiClient.getMetricsHistory(selectedTimeRange)
+                .then(data => {
+                    setHistoricalMetrics(data);
+                    setLoadingHistory(false);
+                })
+                .catch(err => {
+                    console.error("Failed to fetch history:", err);
+                    setLoadingHistory(false);
+                });
+        }
+    }, [selectedTimeRange, setHistoricalMetrics]);
+
+    const displayHistory = selectedTimeRange === 'live' ? liveHistory : historicalMetrics;
 
     const bss = scores?.bss || 0;
     
@@ -68,9 +91,37 @@ export default function Dashboard() {
             </div>
 
             {/* Phase 3: Main Chart Area */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <RevenueChart history={history} />
-                <ProfitPanel history={history} bss={bss} />
+            <div className="flex flex-col gap-4">
+                <AnimatePresence>
+                    {selectedTimeRange !== 'live' && (
+                        <motion.div 
+                            initial={{ opacity: 0, y: -10, height: 0 }}
+                            animate={{ opacity: 1, y: 0, height: 'auto' }}
+                            exit={{ opacity: 0, y: -10, height: 0 }}
+                            className="bg-indigo-500/10 border border-indigo-500/20 rounded-lg px-4 py-3 flex items-center justify-between"
+                        >
+                            <div className="flex items-center gap-2 text-indigo-400 text-sm font-medium">
+                                <Clock size={16} />
+                                Viewing historical data: Last {selectedTimeRange} — Live updates paused
+                            </div>
+                            <button 
+                                onClick={() => setSelectedTimeRange('live')}
+                                className="text-gray-400 hover:text-white text-xs font-semibold px-2 py-1 bg-white/5 hover:bg-white/10 rounded transition-colors"
+                            >
+                                &times; Back to Live
+                            </button>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <RevenueChart 
+                        history={displayHistory} 
+                        loading={loadingHistory}
+                        selectedTimeRange={selectedTimeRange}
+                        setSelectedTimeRange={setSelectedTimeRange} 
+                    />
+                    <ProfitPanel history={displayHistory} bss={bss} />
+                </div>
             </div>
 
             {/* Phase 4: Rules & Alerts */}

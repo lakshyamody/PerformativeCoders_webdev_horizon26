@@ -11,8 +11,60 @@ const SUPPORT_CATEGORIES = [
 class MetricsGenerator {
     constructor() {
         this.history = [];
-        this.maxHistory = 200;
+        this.maxHistory = 50000;
         this.tickCount = 0;
+        this.generateHistoricalData();
+    }
+
+    generateHistoricalData() {
+        const now = Date.now();
+        const oneYearAgo = now - 365 * 24 * 60 * 60 * 1000;
+        
+        // Use realistic baselines matching the dashboard
+        let revenue = 45000;
+        let stock = 600;
+        let tickets = 20;
+        let cash = 120000;
+
+        // 12 months ago up to 24 hours ago (1 point per hour)
+        const startMilli = oneYearAgo;
+        const endMilli = now - 24 * 60 * 60 * 1000;
+        const step = 60 * 60 * 1000;
+
+        for (let t = startMilli; t < endMilli; t += step) {
+            revenue = Math.max(10000, revenue + (Math.random() - 0.48) * 800);
+            stock = Math.max(0, stock + (Math.random() - 0.5) * 20);
+            tickets = Math.max(0, tickets + Math.floor((Math.random() - 0.52) * 4));
+            cash = Math.max(10000, cash + (Math.random() - 0.45) * 2000);
+
+            this.history.push({
+                timestamp: t,
+                bss: 35 + (Math.random() - 0.5) * 15, // Synthetic BSS
+                revenue: Math.round(revenue),
+                stock: Math.round(stock),
+                tickets: Math.round(tickets),
+                cash: Math.round(cash)
+            });
+        }
+
+        // Last 24 hours (1 point per minute)
+        const startRecent = now - 24 * 60 * 60 * 1000;
+        const stepRecent = 60 * 1000;
+        for (let t = startRecent; t <= now; t += stepRecent) {
+            revenue = Math.max(10000, revenue + (Math.random() - 0.48) * 100);
+            stock = Math.max(0, stock + (Math.random() - 0.5) * 5);
+            tickets = Math.max(0, tickets + Math.floor((Math.random() - 0.52) * 2));
+            cash = Math.max(10000, cash + (Math.random() - 0.45) * 500);
+
+            this.history.push({
+                timestamp: t,
+                bss: 35 + (Math.random() - 0.5) * 10,
+                revenue: Math.round(revenue),
+                stock: Math.round(stock),
+                tickets: Math.round(tickets),
+                cash: Math.round(cash)
+            });
+        }
     }
 
     generateInitialMetrics() {
@@ -115,7 +167,7 @@ class MetricsGenerator {
         // Store history
         this.history.push({
             timestamp: Date.now(),
-            bss: null,
+            bss: null, // this will be patched by updateDashboard if needed, or getHistory handles it
             revenue: metrics.sales.revenue,
             stock: metrics.inventory.totalUnits,
             tickets: metrics.support.openTickets,
@@ -172,8 +224,53 @@ class MetricsGenerator {
         return metrics;
     }
 
-    getHistory() {
-        return this.history;
+    getHistory(rangeStr = 'live') {
+        if (!rangeStr || rangeStr === 'live') {
+            return this.history.slice(-60);
+        }
+
+        const now = Date.now();
+        const map = {
+            '30m': 30 * 60 * 1000,
+            '1h': 60 * 60 * 1000,
+            '6h': 6 * 60 * 60 * 1000,
+            '24h': 24 * 60 * 60 * 1000,
+            '7d': 7 * 24 * 60 * 60 * 1000,
+            '30d': 30 * 24 * 60 * 60 * 1000,
+            '3m': 90 * 24 * 60 * 60 * 1000,
+            '6m': 180 * 24 * 60 * 60 * 1000,
+            '12m': 365 * 24 * 60 * 60 * 1000
+        };
+
+        const duration = map[rangeStr] || map['24h'];
+        const cutoff = now - duration;
+
+        const filtered = this.history.filter(d => d.timestamp >= cutoff);
+
+        // Downsample to max 200 points
+        if (filtered.length <= 200) return filtered;
+
+        const bucketSize = Math.ceil(filtered.length / 200);
+        const downsampled = [];
+        
+        for (let i = 0; i < filtered.length; i += bucketSize) {
+            const bucket = filtered.slice(i, i + bucketSize);
+            const avgBss = bucket.reduce((sum, d) => sum + (d.bss || 35), 0) / bucket.length;
+            const avgRev = bucket.reduce((sum, d) => sum + d.revenue, 0) / bucket.length;
+            const avgStock = bucket.reduce((sum, d) => sum + d.stock, 0) / bucket.length;
+            const avgTkt = bucket.reduce((sum, d) => sum + d.tickets, 0) / bucket.length;
+            const avgCash = bucket.reduce((sum, d) => sum + d.cash, 0) / bucket.length;
+
+            downsampled.push({
+                timestamp: bucket[bucket.length - 1].timestamp,
+                bss: avgBss,
+                revenue: avgRev,
+                stock: avgStock,
+                tickets: avgTkt,
+                cash: avgCash
+            });
+        }
+        return downsampled;
     }
 }
 
