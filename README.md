@@ -20,11 +20,8 @@ OpsPulse aggregates operational data from sales, inventory, customer support, an
 - Pulsing red border overlay with crisis banner
 - Visual urgency through animations and color shifts
 
-### 🤖 Voice AI Assistant
-- **Speech Recognition** — Browser-native voice input (Web Speech API)
-- **Text-to-Speech** — AI responses spoken aloud
-- **Natural Language Queries** — "Why is my stress score high?", "Restock Product A"
-- **Action Execution** — Restock, escalate tickets, launch campaigns directly from chat
+### 🤖 AI Assistant
+**OpsPulse AI Assistant** is a text-based chatbot that lets you query your live business data in plain English, asking anything from "Why is my stress score high?" to "What's my cash flow trend?" and getting instant, context-aware answers. What makes it more than a chatbot is its ability to act as an **autonomous agent** — when a metric crosses a critical threshold, it doesn't just alert you, it reasons about the cause and fires corrective actions back through your connected integrations automatically. This means a sudden inventory drop triggers a restock order through SAP, a cash flow crisis flags overdue invoices in QuickBooks, and a support ticket surge escalates cases through your helpdesk — all without any human input, the moment the problem is detected.
 
 ### 🧠 Grand Strategy Engine
 - **Grand Strategy Score (GSS)** — Weighted composite of momentum, sentiment, policy
