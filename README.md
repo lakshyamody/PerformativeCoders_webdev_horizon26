@@ -131,6 +131,4 @@ npm run dev
 
 **PerformativeCoders** ~ Horizon26 Hackathon
 
----
 
-*Built with ⚡ by PerformativeCoders*
