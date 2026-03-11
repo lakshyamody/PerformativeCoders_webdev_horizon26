@@ -1,4 +1,4 @@
-# OpsPulse — AI-Powered Business Operations Command Center 🚀
+# OpsPulse - AI-Powered Business Operations Command Center 🚀
 
 OpsPulse aggregates operational data from sales, inventory, customer support, and finance into a real-time intelligence platform for SMBs. Instead of a passive dashboard, it acts as an **AI-powered command center** that predicts, alerts, and acts.
 
@@ -21,7 +21,7 @@ OpsPulse aggregates operational data from sales, inventory, customer support, an
 - Visual urgency through animations and color shifts
 
 ### 🤖 AI Assistant
-**OpsPulse AI Assistant** is a text-based chatbot that lets you query your live business data in plain English, asking anything from "Why is my stress score high?" to "What's my cash flow trend?" and getting instant, context-aware answers. What makes it more than a chatbot is its ability to act as an **autonomous agent** — when a metric crosses a critical threshold, it doesn't just alert you, it reasons about the cause and fires corrective actions back through your connected integrations automatically. This means a sudden inventory drop triggers a restock order through SAP, a cash flow crisis flags overdue invoices in QuickBooks, and a support ticket surge escalates cases through your helpdesk — all without any human input, the moment the problem is detected.
+**OpsPulse AI Assistant** is a text-based chatbot that lets you query your live business data in plain English, asking anything from "Why is my stress score high?" to "What's my cash flow trend?" and getting instant, context-aware answers. What makes it more than a chatbot is its ability to act as an **autonomous agent**  when a metric crosses a critical threshold, it doesn't just alert you, it reasons about the cause and fires corrective actions back through your connected integrations automatically. This means a sudden inventory drop triggers a restock order through SAP, a cash flow crisis flags overdue invoices in QuickBooks, and a support ticket surge escalates cases through your helpdesk — all without any human input, the moment the problem is detected.
 
 ### 🧠 Grand Strategy Engine
 - **Grand Strategy Score (GSS)** — Weighted composite of momentum, sentiment, policy
@@ -129,7 +129,7 @@ npm run dev
 
 ## 👥 Team
 
-**PerformativeCoders** — Horizon26 Hackathon
+**PerformativeCoders** ~ Horizon26 Hackathon
 
 ---
 
