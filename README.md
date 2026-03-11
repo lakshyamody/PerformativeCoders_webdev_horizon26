@@ -40,7 +40,7 @@ OpsPulse isn't just a static dashboard; it is a **reactive intelligence engine**
     - **Support Overload:** Flags high-severity ticket floods that exceed team capacity.
     - **Liquidity Risk:** Monitors cash burn rate vs. available runway.
 - **Dynamic Interface:** Upon crisis detection, the dashboard shifts into **War Room Mode** (BSS > 70), featuring pulsing red alerts, high-urgency overlays, and real-time WebSocket updates.
-- **AI-Driven Resolution:** Users can command the **Voice AI Assistant** to "Resolve the crisis," which triggers autonomous recovery protocols to stabilize operations.
+- **AI-Driven Resolution:** Users can command the ** AI Assistant** to "Resolve the crisis," which triggers autonomous recovery protocols to stabilize operations.
 
 ## 🏗️ Architecture
 
