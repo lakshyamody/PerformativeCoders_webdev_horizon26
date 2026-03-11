@@ -29,19 +29,18 @@ OpsPulse aggregates operational data from sales, inventory, customer support, an
 - **24-Hour Forecasts** — Revenue, inventory, ticket, and cash predictions
 - **AI Recommendations** — Prioritized action items with expected impact
 
-### 🔴 Crisis Simulation Mode
+### 🔴 Crisis & War Room Mode
 
-OpsPulse includes a realistic crisis engine to demonstrate system resilience and AI-powered recovery.
+OpsPulse isn't just a static dashboard; it is a **reactive intelligence engine** that monitors business health in real-time.
 
-- **Automated Trigger:** A full-scale crisis is **automatically scheduled** to occur 2 minutes after onboarding is completed, testing the user's readiness.
-- **Manual Control:** Simulation can be toggled via the dashboard or through the `POST /api/simulation/toggle` endpoint.
-- **Operational Impact:**
-    - **Revenue Crash:** Sales revenue and conversion rates drop rapidly.
-    - **Inventory Crisis:** Stock levels plummet while demand velocity spikes.
-    - **Support Flood:** A surge of high-severity tickets overwhelms the support queue.
-    - **Cash Burn:** Available cash reserves deplete as operational expenses rise.
-- **Dynamic War Room:** When the **Business Stress Score (BSS)** exceeds 70, the interface shifts into **War Room Mode** with pulsing red alerts and high-urgency notifications.
-- **AI-Powered Recovery:** Users can interact with the **Voice AI Assistant** to initiate "Emergency Recovery Protocols," deploying autonomous agents to stabilize the business.
+- **Intelligent Triggering:** The scoring engine continuously evaluates your **Business Stress Score (BSS)**. If live metrics—such as a sudden revenue drop, an inventory stockout, or a support ticket spike—breach safety thresholds, the system automatically escalates into a **Crisis State**.
+- **Real-Time Detection:**
+    - **Revenue Instability:** Detects sudden drops in conversion rates or sales velocity.
+    - **Supply Chain Failure:** Identifies critical inventory shortages and demand spikes.
+    - **Support Overload:** Flags high-severity ticket floods that exceed team capacity.
+    - **Liquidity Risk:** Monitors cash burn rate vs. available runway.
+- **Dynamic Interface:** Upon crisis detection, the dashboard shifts into **War Room Mode** (BSS > 70), featuring pulsing red alerts, high-urgency overlays, and real-time WebSocket updates.
+- **AI-Driven Resolution:** Users can command the **Voice AI Assistant** to "Resolve the crisis," which triggers autonomous recovery protocols to stabilize operations.
 
 ## 🏗️ Architecture
 
