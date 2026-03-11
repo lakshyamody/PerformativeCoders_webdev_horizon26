@@ -44,8 +44,23 @@ Frontend (React + Vite)           Backend (Node.js + Express)
 ├── Alert Feed                    ├── BSS Scoring Engine
 ├── Voice Assistant               ├── Alert Engine
 ├── War Room Overlay              ├── Strategy Engine
-└── Strategy Panel                └── AI Assistant (NLP)
+├── Strategy Panel                ├── AI Assistant (NLP)
+└── Strategy Panel                └── Webhook Simulation Engine
 ```
+
+## 🔌 Integration & Webhooks (Mocked)
+
+OpsPulse features a robust webhook ingestion engine capable of processing payloads from enterprise platforms like HubSpot, Salesforce, SAP, and QuickBooks.
+
+> [!IMPORTANT]  
+> **Note on Mock Integration:** For the purpose of this demonstration and to comply with legal/privacy requirements (as real-world enterprise integrations often require registered business entities and official API partnerships), this project uses **Mock Webhook Simulators** to display live data features.
+
+### How it Works:
+- **Simulators:** The backend includes built-in simulators that generate realistic JSON payloads for Sales (CRM), Inventory (ERP), and Cash Flow (Accounting).
+- **Ingestion Engine:** These simulated payloads pass through the same `processWebhookPayload` logic that real production webhooks would use, triggering real-time updates in the **Business Stress Score (BSS)** and activating the **War Room**.
+- **Demonstration:** This allows the platform to be fully functional and "live" immediately upon startup without requiring external API keys or business registrations, making it safe for open-source distribution on GitHub.
+
+To toggle simulators, navigate to the **Integrations** page in the dashboard.
 
 ## 🚀 Quick Start
 
